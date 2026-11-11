@@ -1,0 +1,256 @@
+<title>Dad & Daughter Character Looks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Patrick+Hand&display=swap">
+<style>
+  /* Layout: a sketchbook sheet. White "paper" panels (the video's real background) sit on a cool grey desk;
+     three look options in a row, then the expression sheet, then one sample video frame. */
+  :root {
+    --bg: #eceff4;
+    --fg: #171a21;
+    --muted: #586172;
+    --line: #cdd3de;
+    --paper: #ffffff;      /* the video background: white in both themes */
+    --ink: #1b1b1b;        /* marker black, always drawn on paper */
+    --blue: #2457d6;       /* dad's colour */
+    --orange: #ee8420;     /* daughter's colour */
+    --pick-bg: #171a21;
+    --pick-fg: #ffffff;
+    --hand: "Patrick Hand", "Comic Sans MS", "Segoe Print", cursive;
+    --body: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171d; --fg: #e9ecf2; --muted: #9aa3b3; --line: #2d333f;
+      --pick-bg: #e9ecf2; --pick-fg: #14171d;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171d; --fg: #e9ecf2; --muted: #9aa3b3; --line: #2d333f;
+    --pick-bg: #e9ecf2; --pick-fg: #14171d;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.55;
+    padding-block: 40px 64px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .sheet { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; }
+  header { display: flex; flex-direction: column; gap: 8px; }
+  h1 { font-family: var(--hand); font-weight: 400; font-size: clamp(2.2rem, 6vw, 3.2rem); line-height: 1.05; margin: 0; text-wrap: balance; }
+  h2 { font-family: var(--hand); font-weight: 400; font-size: 1.8rem; line-height: 1.1; margin: 0; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  p { margin: 0; max-width: 65ch; }
+  .lede { color: var(--muted); }
+  section { display: flex; flex-direction: column; gap: 16px; }
+
+  .looks { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+  .look { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .look p { color: var(--muted); font-size: 0.94rem; }
+  .paper { background: var(--paper); border: 1px solid var(--line); border-radius: 4px; display: block; width: 100%; height: auto; }
+  .pick { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; background: var(--pick-bg); color: var(--pick-fg); padding: 2px 8px; border-radius: 999px; }
+
+  .faces { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; }
+  .face { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .face span { font-family: var(--hand); font-size: 1.25rem; text-align: center; }
+
+  /* drawing styles */
+  .ink { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+  .thin { stroke-width: 2.5; }
+  .fat { stroke-width: 6; }
+  .dot { fill: var(--ink); stroke: none; }
+  .blue { fill: var(--blue); stroke: none; }
+  .orange { fill: var(--orange); stroke: none; }
+  .wave { fill: none; stroke: var(--blue); stroke-width: 4; stroke-linecap: round; }
+  .ground { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; opacity: 0.25; }
+  .handtext { font-family: var(--hand); fill: var(--ink); }
+</style>
+
+<div class="sheet">
+  <header>
+    <h1>Dad &amp; daughter: three ways to draw them</h1>
+    <p class="lede">All three are plain stick figures on white. They differ in how each character is told apart at thumbnail size, and in how much drawing each frame takes.</p>
+  </header>
+
+  <section>
+    <div class="looks">
+
+      <div class="look">
+        <svg class="paper" viewBox="0 0 300 240" role="img" aria-label="Look A: dad with round glasses, daughter with pigtails, black line only">
+          <path class="ground" d="M30 214 H270"/>
+          <g class="ink" transform="translate(105 45)">
+            <circle r="22"/>
+            <g class="thin"><circle cx="-8" cy="-2" r="6.5"/><circle cx="8" cy="-2" r="6.5"/><path d="M-1.5 -2 H1.5"/></g>
+            <circle class="dot" cx="-8" cy="-2" r="1.8"/><circle class="dot" cx="8" cy="-2" r="1.8"/>
+            <path class="thin" d="M-8 10 Q0 16 8 10"/>
+            <path d="M0 22 V100 M0 42 L-24 80 M0 42 L26 60 L40 38 M0 100 L-18 165 M0 100 L18 165"/>
+          </g>
+          <g class="ink" transform="translate(205 118)">
+            <circle r="19"/>
+            <path d="M-17 -8 Q-31 -6 -30 12 M17 -8 Q31 -6 30 12"/>
+            <circle class="dot" cx="-17" cy="-8" r="3.2"/><circle class="dot" cx="17" cy="-8" r="3.2"/>
+            <circle class="dot" cx="-6" cy="-2" r="2"/><circle class="dot" cx="6" cy="-2" r="2"/>
+            <path class="thin" d="M-6 7 Q0 12 6 7"/>
+            <path d="M0 19 V58 M0 30 L18 50 M0 30 L-28 25 M0 58 L-12 92 M0 58 L12 92"/>
+          </g>
+        </svg>
+        <h3>A. Line only</h3>
+        <p>Glasses for him, pigtails for her, nothing else. Fastest to draw and animate. The two can blur together when the frame is small.</p>
+      </div>
+
+      <div class="look">
+        <svg class="paper" viewBox="0 0 300 240" role="img" aria-label="Look B: dad with dark hair and a blue tie, daughter with an orange dress and bow">
+          <path class="ground" d="M30 214 H270"/>
+          <g class="ink" transform="translate(105 45)">
+            <circle r="22"/>
+            <path class="dot" d="M-22 -5 Q-21 -27 0 -25 Q21 -27 22 -5 Q0 -17 -22 -5 Z"/>
+            <circle class="dot" cx="-8" cy="-1" r="2.2"/><circle class="dot" cx="8" cy="-1" r="2.2"/>
+            <path class="thin" d="M-8 10 Q0 16 8 10"/>
+            <path d="M0 22 V100 M0 42 L-24 80 M0 42 L26 60 L40 38 M0 100 L-18 165 M0 100 L18 165"/>
+            <polygon class="blue" points="0,25 -7,35 0,66 7,35"/>
+          </g>
+          <g class="ink" transform="translate(205 118)">
+            <path d="M0 30 L-18 50 M0 30 L-20 10 M-7 58 L-10 92 M7 58 L10 92"/>
+            <polygon class="orange" points="0,17 -19,62 19,62"/>
+            <circle r="19" fill="#ffffff"/>
+            <polygon class="orange" points="0,-19 -13,-29 -13,-12"/><polygon class="orange" points="0,-19 13,-29 13,-12"/>
+            <circle class="dot" cx="-6" cy="-2" r="2"/><circle class="dot" cx="6" cy="-2" r="2"/>
+            <path class="thin" d="M-6 7 Q0 12 6 7"/>
+          </g>
+        </svg>
+        <h3>B. One colour each <span class="pick">My pick</span></h3>
+        <p>Still stick figures, but he owns blue and she owns orange. You can tell who is who at a glance, and the same two colours can mark who is speaking in captions.</p>
+      </div>
+
+      <div class="look">
+        <svg class="paper" viewBox="0 0 300 240" role="img" aria-label="Look C: thick wobbly marker lines, dad with scruffy hair, daughter with a big head and a bun">
+          <path class="ground" d="M30 214 H270"/>
+          <g class="ink fat" transform="translate(105 45)">
+            <path d="M-22 2 C-24 -14 -10 -25 3 -23 C17 -21 25 -8 22 5 C19 19 6 25 -5 23 C-16 21 -21 13 -22 2 Z"/>
+            <path d="M-16 -18 L-10 -31 L-5 -21 L1 -33 L6 -22 L12 -31 L16 -17"/>
+            <circle class="dot" cx="-8" cy="-3" r="2.6"/><circle class="dot" cx="8" cy="-3" r="2.6"/>
+            <path class="ink" d="M-9 9 Q0 17 9 9"/>
+            <path d="M0 24 C2 50 -2 75 1 100 M0 44 C-12 52 -20 66 -24 80 M1 44 C12 50 22 58 32 52 M1 100 C-6 120 -12 145 -17 165 h-9 M1 100 C8 122 14 144 19 165 h9"/>
+          </g>
+          <g class="ink fat" transform="translate(205 120)">
+            <path d="M-25 2 C-27 -15 -11 -27 3 -25 C19 -23 28 -9 25 5 C22 21 7 27 -6 25 C-18 23 -24 14 -25 2 Z"/>
+            <circle cx="2" cy="-35" r="9"/>
+            <circle class="dot" cx="-8" cy="-3" r="3.2"/><circle class="dot" cx="9" cy="-3" r="3.2"/>
+            <path class="dot" d="M-8 9 Q0 20 9 9 Z"/>
+            <path d="M0 27 C1 38 -1 48 0 58 M0 36 C-8 40 -15 46 -19 54 M0 36 C10 40 20 38 29 30 M0 58 C-4 68 -8 80 -11 90 h-7 M0 58 C4 68 8 80 11 90 h7"/>
+          </g>
+        </svg>
+        <h3>C. Marker doodle</h3>
+        <p>Thick, wobbly lines as if drawn on a whiteboard. The most charm and the most personality, but every pose has to be redrawn by hand to keep the wobble.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Her four faces</h2>
+    <p class="lede">The daughter carries the reactions, so most episodes need only these four heads swapped onto the same body.</p>
+    <div class="faces">
+      <div class="face">
+        <svg class="paper" viewBox="0 0 120 120" role="img" aria-label="Curious face with one raised eyebrow and a question mark">
+          <g class="ink" transform="translate(56 66)">
+            <circle r="30" fill="#ffffff"/>
+            <polygon class="orange" points="0,-30 -17,-43 -17,-21"/><polygon class="orange" points="0,-30 17,-43 17,-21"/>
+            <circle class="dot" cx="-10" cy="-3" r="3"/><circle class="dot" cx="10" cy="-3" r="3"/>
+            <path class="thin" d="M-16 -13 H-5 M5 -17 L16 -20"/>
+            <circle class="thin" cx="0" cy="13" r="3.5"/>
+          </g>
+          <text class="handtext" x="96" y="34" font-size="30">?</text>
+        </svg>
+        <span>“But why?”</span>
+      </div>
+      <div class="face">
+        <svg class="paper" viewBox="0 0 120 120" role="img" aria-label="Confused face with slanted brows and a squiggly mouth">
+          <g class="ink" transform="translate(60 66)">
+            <circle r="30" fill="#ffffff"/>
+            <polygon class="orange" points="0,-30 -17,-43 -17,-21"/><polygon class="orange" points="0,-30 17,-43 17,-21"/>
+            <circle class="dot" cx="-10" cy="-3" r="3"/><circle class="dot" cx="10" cy="-3" r="3"/>
+            <path class="thin" d="M-17 -16 L-5 -12 M5 -12 L17 -16"/>
+            <path class="thin" d="M-11 13 Q-7.5 7 -4 13 T3 13 T10 13"/>
+          </g>
+        </svg>
+        <span>Lost</span>
+      </div>
+      <div class="face">
+        <svg class="paper" viewBox="0 0 120 120" role="img" aria-label="Delighted face with a wide open smile and sparkle lines">
+          <g class="ink" transform="translate(56 66)">
+            <circle r="30" fill="#ffffff"/>
+            <polygon class="orange" points="0,-30 -17,-43 -17,-21"/><polygon class="orange" points="0,-30 17,-43 17,-21"/>
+            <path class="thin" d="M-15 -3 Q-10 -10 -5 -3 M5 -3 Q10 -10 15 -3"/>
+            <path class="dot" d="M-12 8 Q0 25 12 8 Z"/>
+            <path class="thin" d="M36 -30 L44 -38 M40 -18 H51 M28 -40 V-50"/>
+          </g>
+        </svg>
+        <span>“Ohhh!”</span>
+      </div>
+      <div class="face">
+        <svg class="paper" viewBox="0 0 120 120" role="img" aria-label="Unconvinced face with half-closed eyes and a flat mouth">
+          <g class="ink" transform="translate(60 66)">
+            <circle r="30" fill="#ffffff"/>
+            <polygon class="orange" points="0,-30 -17,-43 -17,-21"/><polygon class="orange" points="0,-30 17,-43 17,-21"/>
+            <circle class="dot" cx="-10" cy="-2" r="3"/><circle class="dot" cx="10" cy="-2" r="3"/>
+            <path d="M-16 -6 H-4 M4 -6 H16"/>
+            <path class="thin" d="M-8 14 L9 11"/>
+          </g>
+        </svg>
+        <span>Not buying it</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>A sample frame</h2>
+    <p class="lede">Look B in a 16:9 frame from the Wi-Fi pilot: he points at the drawing, she interrupts.</p>
+    <svg class="paper" viewBox="0 0 640 360" role="img" aria-label="Sample video frame: the dad points at a drawing of a Wi-Fi router sending blue waves towards a tablet the daughter is holding. Her speech bubble reads: But how does it get into the tablet?">
+      <path class="ground" d="M40 341 H600"/>
+      <!-- dad -->
+      <g class="ink" transform="translate(120 150) scale(1.15)">
+        <circle r="22"/>
+        <path class="dot" d="M-22 -5 Q-21 -27 0 -25 Q21 -27 22 -5 Q0 -17 -22 -5 Z"/>
+        <circle class="dot" cx="-6" cy="-1" r="2.2"/><circle class="dot" cx="10" cy="-1" r="2.2"/>
+        <path class="thin" d="M-5 10 Q3 16 11 10"/>
+        <path d="M0 22 V100 M0 42 L-22 80 M0 42 L44 30 M0 100 L-18 165 M0 100 L18 165"/>
+        <polygon class="blue" points="0,25 -7,35 0,66 7,35"/>
+      </g>
+      <!-- router drawing -->
+      <g class="ink">
+        <rect x="250" y="215" width="90" height="30" rx="6"/>
+        <path d="M266 215 L258 185 M324 215 L332 185"/>
+        <circle class="dot" cx="268" cy="230" r="3"/><circle class="dot" cx="282" cy="230" r="3"/><circle class="dot" cx="296" cy="230" r="3"/>
+        <path d="M262 245 V256 M328 245 V256"/>
+      </g>
+      <path class="wave" d="M348 185 A16 16 0 0 0 332 169 M362 185 A30 30 0 0 0 332 155 M376 185 A44 44 0 0 0 332 141"/>
+      <path class="wave" stroke-dasharray="2 12" d="M392 176 C430 184 452 220 466 254"/>
+      <text class="handtext" x="295" y="282" font-size="22" text-anchor="middle">router</text>
+      <!-- tablet -->
+      <g class="ink"><rect x="452" y="262" width="42" height="30" rx="4"/></g>
+      <!-- daughter -->
+      <g class="ink" transform="translate(522 235) scale(1.15)">
+        <path d="M0 30 L-22 44 M0 30 L18 50 M-7 58 L-10 92 M7 58 L10 92"/>
+        <polygon class="orange" points="0,17 -19,62 19,62"/>
+        <circle r="19" fill="#ffffff"/>
+        <polygon class="orange" points="0,-19 -13,-29 -13,-12"/><polygon class="orange" points="0,-19 13,-29 13,-12"/>
+        <circle class="dot" cx="-8" cy="-2" r="2"/><circle class="dot" cx="4" cy="-2" r="2"/>
+        <path class="thin" d="M-13 -9 H-5 M1 -11 L9 -13"/>
+        <circle class="thin" cx="-2" cy="8" r="2.5"/>
+      </g>
+      <!-- speech bubble -->
+      <g class="ink thin">
+        <path fill="#ffffff" d="M411 62 H609 A16 16 0 0 1 625 78 V118 A16 16 0 0 1 609 134 H540 L524 166 L512 134 H411 A16 16 0 0 1 395 118 V78 A16 16 0 0 1 411 62 Z"/>
+      </g>
+      <text class="handtext" x="510" y="92" font-size="23" text-anchor="middle">But how does it get</text>
+      <text class="handtext" x="510" y="120" font-size="23" text-anchor="middle">INTO the tablet?</text>
+    </svg>
+  </section>
+</div>
