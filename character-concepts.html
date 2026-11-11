@@ -15,6 +15,8 @@
     --orange: #ee8420;     /* daughter's colour */
     --pick-bg: #171a21;
     --pick-fg: #ffffff;
+    --wrinkle-a: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22800%22%20height%3D%22450%22%3E%3Cfilter%20id%3D%22f%22%20x%3D%220%22%20y%3D%220%22%20width%3D%22100%25%22%20height%3D%22100%25%22%3E%3CfeTurbulence%20type%3D%22turbulence%22%20baseFrequency%3D%220.006%200.008%22%20numOctaves%3D%225%22%20seed%3D%224%22%2F%3E%3CfeDiffuseLighting%20surfaceScale%3D%229%22%20diffuseConstant%3D%221.15%22%20lighting-color%3D%22white%22%3E%3CfeDistantLight%20azimuth%3D%2240%22%20elevation%3D%2260%22%2F%3E%3C%2FfeDiffuseLighting%3E%3C%2Ffilter%3E%3Crect%20width%3D%22800%22%20height%3D%22450%22%20filter%3D%22url(%23f)%22%2F%3E%3C%2Fsvg%3E");
+    --wrinkle-b: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22400%22%3E%3Cfilter%20id%3D%22f%22%20x%3D%220%22%20y%3D%220%22%20width%3D%22100%25%22%20height%3D%22100%25%22%3E%3CfeTurbulence%20type%3D%22turbulence%22%20baseFrequency%3D%220.006%200.008%22%20numOctaves%3D%225%22%20seed%3D%2217%22%2F%3E%3CfeDiffuseLighting%20surfaceScale%3D%229%22%20diffuseConstant%3D%221.15%22%20lighting-color%3D%22white%22%3E%3CfeDistantLight%20azimuth%3D%2240%22%20elevation%3D%2260%22%2F%3E%3C%2FfeDiffuseLighting%3E%3C%2Ffilter%3E%3Crect%20width%3D%22400%22%20height%3D%22400%22%20filter%3D%22url(%23f)%22%2F%3E%3C%2Fsvg%3E");
     --hand: "Patrick Hand", "Comic Sans MS", "Segoe Print", cursive;
     --body: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   }
@@ -53,7 +55,17 @@
   .looks { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
   .look { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
   .look p { color: var(--muted); font-size: 0.94rem; }
-  .paper { background: var(--paper); border: 1px solid var(--line); border-radius: 4px; display: block; width: 100%; height: auto; }
+  .paperwrap { position: relative; background: var(--paper); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; line-height: 0; }
+  .paperwrap::after { content: ""; position: absolute; inset: 0; background: var(--wrinkle-a) center / cover; mix-blend-mode: multiply; pointer-events: none; }
+  .face .paperwrap::after { background-image: var(--wrinkle-b); }
+  .look:nth-child(2) .paperwrap::after { background-size: 220%; background-position: 0% 10%; }
+  .look:nth-child(3) .paperwrap::after { background-size: 220%; background-position: 100% 90%; }
+  .plain .paperwrap::after { display: none; }
+  .paper { display: block; width: 100%; height: auto; }
+  .switch { display: inline-flex; align-self: flex-start; border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; margin-top: 8px; }
+  .switch button { font: 500 0.9rem var(--body); color: var(--fg); background: transparent; border: 0; border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+  .switch button[aria-pressed="true"] { background: var(--pick-bg); color: var(--pick-fg); }
+  .switch button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   .pick { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; background: var(--pick-bg); color: var(--pick-fg); padding: 2px 8px; border-radius: 999px; }
 
   .faces { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; }
@@ -76,13 +88,17 @@
   <header>
     <h1>Dad &amp; daughter: three ways to draw them</h1>
     <p class="lede">All three are plain stick figures on white. They differ in how each character is told apart at thumbnail size, and in how much drawing each frame takes.</p>
+    <div class="switch" role="group" aria-label="Paper style">
+      <button type="button" id="paper-wrinkled" aria-pressed="true">Wrinkled paper</button>
+      <button type="button" id="paper-plain" aria-pressed="false">Plain white</button>
+    </div>
   </header>
 
   <section>
     <div class="looks">
 
       <div class="look">
-        <svg class="paper" viewBox="0 0 300 240" role="img" aria-label="Look A: dad with round glasses, daughter with pigtails, black line only">
+        <div class="paperwrap"><svg class="paper" viewBox="0 0 300 240" role="img" aria-label="Look A: dad with round glasses, daughter with pigtails, black line only">
           <path class="ground" d="M30 214 H270"/>
           <g class="ink" transform="translate(105 45)">
             <circle r="22"/>
@@ -99,13 +115,13 @@
             <path class="thin" d="M-6 7 Q0 12 6 7"/>
             <path d="M0 19 V58 M0 30 L18 50 M0 30 L-28 25 M0 58 L-12 92 M0 58 L12 92"/>
           </g>
-        </svg>
+        </svg></div>
         <h3>A. Line only</h3>
         <p>Glasses for him, pigtails for her, nothing else. Fastest to draw and animate. The two can blur together when the frame is small.</p>
       </div>
 
       <div class="look">
-        <svg class="paper" viewBox="0 0 300 240" role="img" aria-label="Look B: dad with dark hair and a blue tie, daughter with an orange dress and bow">
+        <div class="paperwrap"><svg class="paper" viewBox="0 0 300 240" role="img" aria-label="Look B: dad with dark hair and a blue tie, daughter with an orange dress and bow">
           <path class="ground" d="M30 214 H270"/>
           <g class="ink" transform="translate(105 45)">
             <circle r="22"/>
@@ -123,13 +139,13 @@
             <circle class="dot" cx="-6" cy="-2" r="2"/><circle class="dot" cx="6" cy="-2" r="2"/>
             <path class="thin" d="M-6 7 Q0 12 6 7"/>
           </g>
-        </svg>
+        </svg></div>
         <h3>B. One colour each <span class="pick">My pick</span></h3>
         <p>Still stick figures, but he owns blue and she owns orange. You can tell who is who at a glance, and the same two colours can mark who is speaking in captions.</p>
       </div>
 
       <div class="look">
-        <svg class="paper" viewBox="0 0 300 240" role="img" aria-label="Look C: thick wobbly marker lines, dad with scruffy hair, daughter with a big head and a bun">
+        <div class="paperwrap"><svg class="paper" viewBox="0 0 300 240" role="img" aria-label="Look C: thick wobbly marker lines, dad with scruffy hair, daughter with a big head and a bun">
           <path class="ground" d="M30 214 H270"/>
           <g class="ink fat" transform="translate(105 45)">
             <path d="M-22 2 C-24 -14 -10 -25 3 -23 C17 -21 25 -8 22 5 C19 19 6 25 -5 23 C-16 21 -21 13 -22 2 Z"/>
@@ -145,7 +161,7 @@
             <path class="dot" d="M-8 9 Q0 20 9 9 Z"/>
             <path d="M0 27 C1 38 -1 48 0 58 M0 36 C-8 40 -15 46 -19 54 M0 36 C10 40 20 38 29 30 M0 58 C-4 68 -8 80 -11 90 h-7 M0 58 C4 68 8 80 11 90 h7"/>
           </g>
-        </svg>
+        </svg></div>
         <h3>C. Marker doodle</h3>
         <p>Thick, wobbly lines as if drawn on a whiteboard. The most charm and the most personality, but every pose has to be redrawn by hand to keep the wobble.</p>
       </div>
@@ -158,7 +174,7 @@
     <p class="lede">The daughter carries the reactions, so most episodes need only these four heads swapped onto the same body.</p>
     <div class="faces">
       <div class="face">
-        <svg class="paper" viewBox="0 0 120 120" role="img" aria-label="Curious face with one raised eyebrow and a question mark">
+        <div class="paperwrap"><svg class="paper" viewBox="0 0 120 120" role="img" aria-label="Curious face with one raised eyebrow and a question mark">
           <g class="ink" transform="translate(56 66)">
             <circle r="30" fill="#ffffff"/>
             <polygon class="orange" points="0,-30 -17,-43 -17,-21"/><polygon class="orange" points="0,-30 17,-43 17,-21"/>
@@ -167,11 +183,11 @@
             <circle class="thin" cx="0" cy="13" r="3.5"/>
           </g>
           <text class="handtext" x="96" y="34" font-size="30">?</text>
-        </svg>
+        </svg></div>
         <span>“But why?”</span>
       </div>
       <div class="face">
-        <svg class="paper" viewBox="0 0 120 120" role="img" aria-label="Confused face with slanted brows and a squiggly mouth">
+        <div class="paperwrap"><svg class="paper" viewBox="0 0 120 120" role="img" aria-label="Confused face with slanted brows and a squiggly mouth">
           <g class="ink" transform="translate(60 66)">
             <circle r="30" fill="#ffffff"/>
             <polygon class="orange" points="0,-30 -17,-43 -17,-21"/><polygon class="orange" points="0,-30 17,-43 17,-21"/>
@@ -179,11 +195,11 @@
             <path class="thin" d="M-17 -16 L-5 -12 M5 -12 L17 -16"/>
             <path class="thin" d="M-11 13 Q-7.5 7 -4 13 T3 13 T10 13"/>
           </g>
-        </svg>
+        </svg></div>
         <span>Lost</span>
       </div>
       <div class="face">
-        <svg class="paper" viewBox="0 0 120 120" role="img" aria-label="Delighted face with a wide open smile and sparkle lines">
+        <div class="paperwrap"><svg class="paper" viewBox="0 0 120 120" role="img" aria-label="Delighted face with a wide open smile and sparkle lines">
           <g class="ink" transform="translate(56 66)">
             <circle r="30" fill="#ffffff"/>
             <polygon class="orange" points="0,-30 -17,-43 -17,-21"/><polygon class="orange" points="0,-30 17,-43 17,-21"/>
@@ -191,11 +207,11 @@
             <path class="dot" d="M-12 8 Q0 25 12 8 Z"/>
             <path class="thin" d="M36 -30 L44 -38 M40 -18 H51 M28 -40 V-50"/>
           </g>
-        </svg>
+        </svg></div>
         <span>“Ohhh!”</span>
       </div>
       <div class="face">
-        <svg class="paper" viewBox="0 0 120 120" role="img" aria-label="Unconvinced face with half-closed eyes and a flat mouth">
+        <div class="paperwrap"><svg class="paper" viewBox="0 0 120 120" role="img" aria-label="Unconvinced face with half-closed eyes and a flat mouth">
           <g class="ink" transform="translate(60 66)">
             <circle r="30" fill="#ffffff"/>
             <polygon class="orange" points="0,-30 -17,-43 -17,-21"/><polygon class="orange" points="0,-30 17,-43 17,-21"/>
@@ -203,7 +219,7 @@
             <path d="M-16 -6 H-4 M4 -6 H16"/>
             <path class="thin" d="M-8 14 L9 11"/>
           </g>
-        </svg>
+        </svg></div>
         <span>Not buying it</span>
       </div>
     </div>
@@ -212,7 +228,7 @@
   <section>
     <h2>A sample frame</h2>
     <p class="lede">Look B in a 16:9 frame from the Wi-Fi pilot: he points at the drawing, she interrupts.</p>
-    <svg class="paper" viewBox="0 0 640 360" role="img" aria-label="Sample video frame: the dad points at a drawing of a Wi-Fi router sending blue waves towards a tablet the daughter is holding. Her speech bubble reads: But how does it get into the tablet?">
+    <div class="paperwrap"><svg class="paper" viewBox="0 0 640 360" role="img" aria-label="Sample video frame: the dad points at a drawing of a Wi-Fi router sending blue waves towards a tablet the daughter is holding. Her speech bubble reads: But how does it get into the tablet?">
       <path class="ground" d="M40 341 H600"/>
       <!-- dad -->
       <g class="ink" transform="translate(120 150) scale(1.15)">
@@ -251,6 +267,18 @@
       </g>
       <text class="handtext" x="510" y="92" font-size="23" text-anchor="middle">But how does it get</text>
       <text class="handtext" x="510" y="120" font-size="23" text-anchor="middle">INTO the tablet?</text>
-    </svg>
+    </svg></div>
   </section>
 </div>
+<script>
+  (function () {
+    var w = document.getElementById("paper-wrinkled"), p = document.getElementById("paper-plain");
+    function set(plain) {
+      document.body.classList.toggle("plain", plain);
+      w.setAttribute("aria-pressed", String(!plain));
+      p.setAttribute("aria-pressed", String(plain));
+    }
+    w.addEventListener("click", function () { set(false); });
+    p.addEventListener("click", function () { set(true); });
+  })();
+</script>
