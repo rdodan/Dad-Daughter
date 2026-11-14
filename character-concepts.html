@@ -15,8 +15,6 @@
     --orange: #ee8420;     /* daughter's colour */
     --pick-bg: #171a21;
     --pick-fg: #ffffff;
-    --wrinkle-a: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22800%22%20height%3D%22450%22%3E%3Cfilter%20id%3D%22f%22%20x%3D%220%22%20y%3D%220%22%20width%3D%22100%25%22%20height%3D%22100%25%22%3E%3CfeTurbulence%20type%3D%22turbulence%22%20baseFrequency%3D%220.006%200.008%22%20numOctaves%3D%225%22%20seed%3D%224%22%2F%3E%3CfeDiffuseLighting%20surfaceScale%3D%229%22%20diffuseConstant%3D%221.15%22%20lighting-color%3D%22white%22%3E%3CfeDistantLight%20azimuth%3D%2240%22%20elevation%3D%2260%22%2F%3E%3C%2FfeDiffuseLighting%3E%3C%2Ffilter%3E%3Crect%20width%3D%22800%22%20height%3D%22450%22%20filter%3D%22url(%23f)%22%2F%3E%3C%2Fsvg%3E");
-    --wrinkle-b: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22400%22%3E%3Cfilter%20id%3D%22f%22%20x%3D%220%22%20y%3D%220%22%20width%3D%22100%25%22%20height%3D%22100%25%22%3E%3CfeTurbulence%20type%3D%22turbulence%22%20baseFrequency%3D%220.006%200.008%22%20numOctaves%3D%225%22%20seed%3D%2217%22%2F%3E%3CfeDiffuseLighting%20surfaceScale%3D%229%22%20diffuseConstant%3D%221.15%22%20lighting-color%3D%22white%22%3E%3CfeDistantLight%20azimuth%3D%2240%22%20elevation%3D%2260%22%2F%3E%3C%2FfeDiffuseLighting%3E%3C%2Ffilter%3E%3Crect%20width%3D%22400%22%20height%3D%22400%22%20filter%3D%22url(%23f)%22%2F%3E%3C%2Fsvg%3E");
     --hand: "Patrick Hand", "Comic Sans MS", "Segoe Print", cursive;
     --body: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   }
@@ -56,12 +54,11 @@
   .look { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
   .look p { color: var(--muted); font-size: 0.94rem; }
   .paperwrap { position: relative; background: var(--paper); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; line-height: 0; }
-  .paperwrap::after { content: ""; position: absolute; inset: 0; background: var(--wrinkle-a) center / cover; mix-blend-mode: multiply; pointer-events: none; }
-  .face .paperwrap::after { background-image: var(--wrinkle-b); }
-  .look:nth-child(2) .paperwrap::after { background-size: 220%; background-position: 0% 10%; }
-  .look:nth-child(3) .paperwrap::after { background-size: 220%; background-position: 100% 90%; }
-  .plain .paperwrap::after { display: none; }
-  .paper { display: block; width: 100%; height: auto; }
+  .paper { display: block; width: 100%; height: auto; background: var(--paper); filter: url(#onpaper-1); }
+  .look:nth-child(2) .paper, .face:nth-child(2) .paper { filter: url(#onpaper-2); }
+  .look:nth-child(3) .paper, .face:nth-child(3) .paper { filter: url(#onpaper-3); }
+  .face:nth-child(1) .paper, .face:nth-child(4) .paper { filter: url(#onpaper-4); }
+  .plain .paper { filter: none; }
   .switch { display: inline-flex; align-self: flex-start; border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; margin-top: 8px; }
   .switch button { font: 500 0.9rem var(--body); color: var(--fg); background: transparent; border: 0; border-radius: 999px; padding: 6px 14px; cursor: pointer; }
   .switch button[aria-pressed="true"] { background: var(--pick-bg); color: var(--pick-fg); }
@@ -84,10 +81,64 @@
   .handtext { font-family: var(--hand); fill: var(--ink); }
 </style>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+    <filter id="onpaper-1" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="turbulence" baseFrequency="0.006 0.008" numOctaves="5" seed="4" result="crease"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="11" result="grainRaw"/>
+      <feColorMatrix in="grainRaw" type="matrix" values="2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  0 0 0 0 1" result="grain"/>
+      <feDisplacementMap in="SourceGraphic" in2="crease" scale="14" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+      <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
+      <feFlood flood-color="#ffffff" result="white"/>
+      <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
+      <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.42" k2="1" k3="0.42" k4="0" result="inked"/>
+      <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
+      <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
+      <feBlend in="light" in2="inked" mode="hard-light"/>
+    </filter>
+    <filter id="onpaper-2" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="turbulence" baseFrequency="0.006 0.008" numOctaves="5" seed="17" result="crease"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="24" result="grainRaw"/>
+      <feColorMatrix in="grainRaw" type="matrix" values="2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  0 0 0 0 1" result="grain"/>
+      <feDisplacementMap in="SourceGraphic" in2="crease" scale="14" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+      <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
+      <feFlood flood-color="#ffffff" result="white"/>
+      <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
+      <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.42" k2="1" k3="0.42" k4="0" result="inked"/>
+      <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
+      <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
+      <feBlend in="light" in2="inked" mode="hard-light"/>
+    </filter>
+    <filter id="onpaper-3" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="turbulence" baseFrequency="0.006 0.008" numOctaves="5" seed="31" result="crease"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="38" result="grainRaw"/>
+      <feColorMatrix in="grainRaw" type="matrix" values="2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  0 0 0 0 1" result="grain"/>
+      <feDisplacementMap in="SourceGraphic" in2="crease" scale="14" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+      <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
+      <feFlood flood-color="#ffffff" result="white"/>
+      <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
+      <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.42" k2="1" k3="0.42" k4="0" result="inked"/>
+      <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
+      <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
+      <feBlend in="light" in2="inked" mode="hard-light"/>
+    </filter>
+    <filter id="onpaper-4" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="turbulence" baseFrequency="0.006 0.008" numOctaves="5" seed="52" result="crease"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="59" result="grainRaw"/>
+      <feColorMatrix in="grainRaw" type="matrix" values="2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  0 0 0 0 1" result="grain"/>
+      <feDisplacementMap in="SourceGraphic" in2="crease" scale="14" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+      <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
+      <feFlood flood-color="#ffffff" result="white"/>
+      <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
+      <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.42" k2="1" k3="0.42" k4="0" result="inked"/>
+      <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
+      <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
+      <feBlend in="light" in2="inked" mode="hard-light"/>
+    </filter>
+  </defs></svg>
 <div class="sheet">
   <header>
     <h1>Dad &amp; daughter: three ways to draw them</h1>
-    <p class="lede">All three are plain stick figures on white. They differ in how each character is told apart at thumbnail size, and in how much drawing each frame takes.</p>
+    <p class="lede">All three are plain stick figures, shown here as if drawn on a crumpled sheet. They differ in how each character is told apart at thumbnail size, and in how much drawing each frame takes.</p>
     <div class="switch" role="group" aria-label="Paper style">
       <button type="button" id="paper-wrinkled" aria-pressed="true">Wrinkled paper</button>
       <button type="button" id="paper-plain" aria-pressed="false">Plain white</button>
