@@ -5,6 +5,7 @@ const { chromium } = require('playwright');
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { envelope } = require('./envelope');
 
 (async () => {
   const [fontPath, framesDir, outArg, stillsArg] = process.argv.slice(2);
@@ -13,6 +14,7 @@ const path = require('path');
   const lines = JSON.parse(fs.readFileSync(path.join(__dirname, 'lines.json'), 'utf8'));
   for (const l of lines) {
     l.dur = parseFloat(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', audio(l.id)]).toString());
+    l.env = envelope(audio(l.id));
   }
 
   const font = fs.readFileSync(fontPath).toString('base64');

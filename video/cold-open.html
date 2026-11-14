@@ -93,8 +93,9 @@ function dad(x, t, st) {
     point: 'M0 42 L46 58',
     up: flap ? 'M0 42 L26 38 L38 6' : 'M0 42 L27 38 L42 9',
   }[st.arm];
-  const mouth = st.speaking && Math.floor(t * 8) % 2
-    ? '<ellipse class="dot" cx="3" cy="11" rx="5" ry="4.5"/>'
+  const m = st.mouth || 0;
+  const mouth = m > 0.12
+    ? `<ellipse class="dot" cx="3" cy="11" rx="${(4 + 2 * m).toFixed(2)}" ry="${(1.5 + 5 * m).toFixed(2)}"/>`
     : '<path class="thin" d="M-5 10 Q3 16 11 10"/>';
   return `<g class="ink" transform="translate(${x.toFixed(1)} ${GROUND - 165 * s + bob}) scale(${s})">
     <path d="M0 22 V100 M0 42 L-22 80 ${arm} ${legs}"/>
@@ -109,27 +110,27 @@ function dad(x, t, st) {
 function kid(x, t, st) {
   const s = 1.45 * st.scale;
   const ox = st.look === 'left' ? -3 : 0;
-  const open = st.speaking && Math.floor(t * 8) % 2;
+  const m = st.mouth || 0, open = m > 0.12;
   let brows = '', mouth = '', extra = '', eyeR = 2;
   if (st.face === 'lost') {
     brows = `M${-13 + ox} -10 L${-5 + ox} -7 M${5 + ox} -7 L${13 + ox} -10`;
-    mouth = open ? `<ellipse class="dot" cx="${ox}" cy="9" rx="5" ry="6"/>` : `<path class="thin" d="M${-7 + ox} 9 Q${-4.5 + ox} 5 ${-2 + ox} 9 T${3 + ox} 9 T${8 + ox} 9"/>`;
+    mouth = open ? `<ellipse class="dot" cx="${ox}" cy="9" rx="${(3.5 + 2 * m).toFixed(2)}" ry="${(1.5 + 5 * m).toFixed(2)}"/>` : `<path class="thin" d="M${-7 + ox} 9 Q${-4.5 + ox} 5 ${-2 + ox} 9 T${3 + ox} 9 T${8 + ox} 9"/>`;
   } else if (st.face === 'listen') {
     mouth = `<path class="thin" d="M${-4 + ox} 9 H${4 + ox}"/>`;
   } else if (st.face === 'curious') {
     brows = `M${-13 + ox} -9 H${-5 + ox} M${1 + ox} -11 L${9 + ox} -13`;
-    mouth = open ? `<ellipse class="dot" cx="${ox}" cy="9" rx="4" ry="5"/>` : `<circle class="thin" cx="${ox}" cy="9" r="2.5"/>`;
+    mouth = open ? `<ellipse class="dot" cx="${ox}" cy="9" rx="${(3 + 1.5 * m).toFixed(2)}" ry="${(1.5 + 4 * m).toFixed(2)}"/>` : `<circle class="thin" cx="${ox}" cy="9" r="2.5"/>`;
   } else if (st.face === 'viewer') {
     brows = 'M-12 -11 H-4 M4 -11 H12';
     eyeR = 2.4;
-    mouth = open ? '<ellipse class="dot" cx="0" cy="9" rx="4.5" ry="4.5"/>' : '<path class="thin" d="M-5 8 Q0 11 5 8"/>';
+    mouth = open ? `<ellipse class="dot" cx="0" cy="9" rx="${(3.5 + 1.5 * m).toFixed(2)}" ry="${(1.5 + 4 * m).toFixed(2)}"/>` : '<path class="thin" d="M-5 8 Q0 11 5 8"/>';
   } else if (st.face === 'flat') {
     brows = 'M-11 -5 H-3 M3 -5 H11';
-    mouth = '<path class="thin" d="M-5 10 L6 8"/>';
+    mouth = open ? `<ellipse class="dot" cx="0" cy="9" rx="${(3 + m).toFixed(2)}" ry="${(1 + 3 * m).toFixed(2)}"/>` : '<path class="thin" d="M-5 10 L6 8"/>';
   } else if (st.face === 'wow') {
     brows = `M${-12 + ox} -12 L${-4 + ox} -14 M${4 + ox} -14 L${12 + ox} -12`;
     eyeR = 2.8;
-    mouth = `<ellipse class="dot" cx="${ox}" cy="9.5" rx="6" ry="${open ? 8 : 6.5}"/>`;
+    mouth = `<ellipse class="dot" cx="${ox}" cy="9.5" rx="6" ry="${(6.5 + 3 * m).toFixed(2)}"/>`;
     extra = '<path class="thin" d="M26 -20 L33 -27 M29 -8 H38 M-26 -20 L-33 -27 M-29 -8 H-38"/>';
   }
   let arms, tablet;
@@ -166,6 +167,14 @@ function bubble(lines, tipX, tipY, pop) {
   const k = 0.85 + 0.15 * pop;
   const text = lines.map((l, i) => `<text class="txt" x="${cx}" y="${y0 + 36 + i * lh}" font-size="${size}" text-anchor="middle">${l}</text>`).join('');
   return `<g transform="translate(${tipX} ${tipY}) scale(${k.toFixed(3)}) translate(${-tipX} ${-tipY})"><path class="ink thin" fill="#ffffff" d="${d}"/>${text}</g>`;
+}
+
+// How open a character's mouth is right now, from the loudness of their voice clip.
+// `env` is one value per video frame (0..1), measured from the audio in render.js.
+function mouthLevel(who, tRaw) {
+  const l = LINES.find(x => x.who === who && between(tRaw, x.a, x.b));
+  if (!l || !l.env) return 0;
+  return l.env[Math.floor((tRaw - l.a) * FPS)] || 0;
 }
 
 const CLOSE_UP = 2.5;   // how far the camera pushes in for a to-viewer line
@@ -222,7 +231,7 @@ function scene(tRaw) {
     dadX = -90 + 260 * clamp((t - T.walkA) / 1.4, 0, 1);
     const speaking = !!line && line.who === 'dad';
     const arm = t >= L.d3.a ? 'up' : between(t, T.pointA, T.pointB) ? 'point' : speaking ? 'talk' : 'rest';
-    out += dad(dadX, t, { walk: t < T.walkB, arm, speaking });
+    out += dad(dadX, t, { walk: t < T.walkB, arm, mouth: mouthLevel('dad', tRaw) });
   }
 
   // Daughter
@@ -235,7 +244,7 @@ function scene(tRaw) {
   else if (zoomed) { face = t < L.k4.b + 0.2 ? 'viewer' : 'flat'; look = 'front'; }
   else if (between(t, L.k6.a - 0.1, L.k6.b + 0.1)) face = 'curious';
   else if (t >= L.k7.a - 0.05) { face = 'wow'; arms = 'up'; }
-  out += kid(kidX, t, { scale: 1, face, look, speaking: kidSpeaking, arms, shake });
+  out += kid(kidX, t, { scale: 1, face, look, mouth: mouthLevel('kid', tRaw), arms, shake });
 
   // Speech bubble in the wide shot (to-viewer lines get a caption beside the close-up instead)
   if (line && !line.viewer) {
