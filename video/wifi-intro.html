@@ -1,0 +1,251 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Wi-Fi pilot: first 30 seconds</title>
+<style>
+  html, body { margin: 0; background: #fff; }
+  #stage { display: block; width: 854px; height: 480px; background: #fff; filter: url(#onpaper); }
+  .ink { fill: none; stroke: #050505; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+  .thin { stroke-width: 3.2; }
+  .hair { stroke-width: 2.2; }
+  .dot { fill: #050505; stroke: none; }
+  .blue { fill: #2457d6; stroke: none; }
+  .orange { fill: #ee8420; stroke: none; }
+  .wave { fill: none; stroke: #2457d6; stroke-width: 5; stroke-linecap: round; }
+  .txt { font-family: "Patrick Hand", "Comic Sans MS", cursive; fill: #050505; stroke: none; }
+</style>
+</head>
+<body>
+<!-- The paper: creases stay still, the ink grain changes every few frames so the lines feel hand-drawn. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="onpaper" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feTurbulence type="turbulence" baseFrequency="0.006 0.008" numOctaves="5" seed="17" result="crease"/>
+    <feTurbulence id="grainNoise" type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="24" result="grainRaw"/>
+    <feColorMatrix in="grainRaw" type="matrix" values="2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  0 0 0 0 1" result="grain"/>
+    <feDisplacementMap in="SourceGraphic" in2="crease" scale="10" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+    <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
+    <feFlood flood-color="#ffffff" result="white"/>
+    <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
+    <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.2" k2="1" k3="0.2" k4="0" result="inked"/>
+    <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
+    <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
+    <feBlend in="light" in2="inked" mode="hard-light"/>
+  </filter>
+</defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><text id="measure" class="txt" font-size="27"></text></svg>
+<svg id="stage" viewBox="0 0 854 480"></svg>
+
+<script>
+const FPS = 24, DURATION = 30, GROUND = 430;
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const ease = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+const seg = (t, a, b) => ease((t - a) / (b - a));
+const between = (t, a, b) => t >= a && t < b;
+
+// Who says what, and when. `viewer` lines are spoken straight to the camera.
+const LINES = [
+  { who: 'kid', a: 0.6,  b: 2.6,  lines: ["It's stuck AGAIN!"] },
+  { who: 'kid', a: 2.8,  b: 5.0,  lines: ["Dad! The Wi-Fi", "is broken!"] },
+  { who: 'dad', a: 6.0,  b: 10.0, lines: ["It's not broken. You walked", "too far from the router."] },
+  { who: 'kid', a: 10.3, b: 12.0, lines: ["The what?"] },
+  { who: 'dad', a: 13.2, b: 16.4, lines: ["That little box with", "the blinking lights."] },
+  { who: 'kid', a: 16.8, b: 21.6, lines: ["Be honest. Do YOU know", "how a cartoon gets from", "that box into my tablet?"], viewer: true },
+  { who: 'kid', a: 21.8, b: 23.2, lines: ["...Me neither."], viewer: true },
+  { who: 'kid', a: 23.5, b: 26.3, lines: ["There's no wire, Dad.", "How does it get in?"] },
+  { who: 'dad', a: 26.6, b: 27.9, lines: ["It flies."] },
+  { who: 'kid', a: 28.1, b: 30.1, lines: ["It FLIES?!"] },
+];
+
+const measureEl = document.getElementById('measure');
+function textWidth(s, size) {
+  measureEl.setAttribute('font-size', size);
+  measureEl.textContent = s;
+  return measureEl.getComputedTextLength();
+}
+const draw = p => `pathLength="1" stroke-dasharray="1" stroke-dashoffset="${(1 - clamp(p, 0, 1)).toFixed(3)}"`;
+
+function dad(x, t, st) {
+  const s = 1.45;
+  let bob = 0, legs = 'M0 100 L-18 165 M0 100 L18 165';
+  if (st.walk) {
+    const ph = Math.floor(t * 6) % 2;
+    bob = ph ? -4 : 0;
+    legs = ph ? 'M0 100 L-24 162 M0 100 L8 165' : 'M0 100 L-6 165 M0 100 L24 162';
+  }
+  const flap = Math.floor(t * 4) % 2;
+  const arm = {
+    rest: 'M0 42 L22 80',
+    talk: flap ? 'M0 42 L26 60 L40 38' : 'M0 42 L27 58 L45 44',
+    point: 'M0 42 L46 58',
+    up: flap ? 'M0 42 L26 38 L38 6' : 'M0 42 L27 38 L42 9',
+  }[st.arm];
+  const mouth = st.speaking && Math.floor(t * 8) % 2
+    ? '<ellipse class="dot" cx="3" cy="11" rx="5" ry="4.5"/>'
+    : '<path class="thin" d="M-5 10 Q3 16 11 10"/>';
+  return `<g class="ink" transform="translate(${x.toFixed(1)} ${GROUND - 165 * s + bob}) scale(${s})">
+    <path d="M0 22 V100 M0 42 L-22 80 ${arm} ${legs}"/>
+    <polygon class="blue" points="0,25 -7,35 0,66 7,35"/>
+    <circle r="22" fill="#ffffff"/>
+    <path class="dot" d="M-22 -5 Q-21 -27 0 -25 Q21 -27 22 -5 Q0 -17 -22 -5 Z"/>
+    <circle class="dot" cx="-5" cy="-1" r="2.2"/><circle class="dot" cx="11" cy="-1" r="2.2"/>
+    ${mouth}
+  </g>`;
+}
+
+function kid(x, t, st) {
+  const s = 1.45 * st.scale;
+  const ox = st.look === 'left' ? -3 : 0;
+  const open = st.speaking && Math.floor(t * 8) % 2;
+  let brows = '', mouth = '', extra = '', eyeR = 2;
+  if (st.face === 'lost') {
+    brows = `M${-13 + ox} -10 L${-5 + ox} -7 M${5 + ox} -7 L${13 + ox} -10`;
+    mouth = open ? `<ellipse class="dot" cx="${ox}" cy="9" rx="5" ry="6"/>` : `<path class="thin" d="M${-7 + ox} 9 Q${-4.5 + ox} 5 ${-2 + ox} 9 T${3 + ox} 9 T${8 + ox} 9"/>`;
+  } else if (st.face === 'listen') {
+    mouth = `<path class="thin" d="M${-4 + ox} 9 H${4 + ox}"/>`;
+  } else if (st.face === 'curious') {
+    brows = `M${-13 + ox} -9 H${-5 + ox} M${1 + ox} -11 L${9 + ox} -13`;
+    mouth = open ? `<ellipse class="dot" cx="${ox}" cy="9" rx="4" ry="5"/>` : `<circle class="thin" cx="${ox}" cy="9" r="2.5"/>`;
+  } else if (st.face === 'viewer') {
+    brows = 'M-12 -11 H-4 M4 -11 H12';
+    eyeR = 2.4;
+    mouth = open ? '<ellipse class="dot" cx="0" cy="9" rx="4.5" ry="4.5"/>' : '<path class="thin" d="M-5 8 Q0 11 5 8"/>';
+  } else if (st.face === 'flat') {
+    brows = 'M-11 -5 H-3 M3 -5 H11';
+    mouth = '<path class="thin" d="M-5 10 L6 8"/>';
+  } else if (st.face === 'wow') {
+    brows = `M${-12 + ox} -12 L${-4 + ox} -14 M${4 + ox} -14 L${12 + ox} -12`;
+    eyeR = 2.8;
+    mouth = `<ellipse class="dot" cx="${ox}" cy="9.5" rx="6" ry="${open ? 8 : 6.5}"/>`;
+    extra = '<path class="thin" d="M26 -20 L33 -27 M29 -8 H38 M-26 -20 L-33 -27 M-29 -8 H-38"/>';
+  }
+  let arms, tablet;
+  const spin = Math.floor(t * 8) * 45;
+  const screen = (cx, cy) => `<path class="hair" transform="rotate(${spin} ${cx} ${cy})" d="M${cx + 6} ${cy} A6 6 0 1 1 ${cx} ${cy - 6}"/>`;
+  if (st.arms === 'up') {
+    const j = Math.floor(t * 6) % 2 ? 2 : 0;
+    arms = `M0 30 L-27 ${10 - j} M0 30 L24 ${6 - j}`;
+    tablet = `<g transform="translate(-42 ${-4 - j}) rotate(-24)"><rect x="-18" y="-14" width="36" height="27" rx="3" fill="#ffffff"/>${screen(0, 0)}</g>`;
+  } else {
+    arms = 'M0 30 L-24 40 M0 30 L-24 52';
+    tablet = `<g transform="rotate(${st.shake || 0} -40 46)"><rect x="-58" y="32" width="36" height="27" rx="3" fill="#ffffff"/>${screen(-40, 45.5)}</g>`;
+  }
+  return `<g class="ink" transform="translate(${x.toFixed(1)} ${(GROUND - 92 * s).toFixed(1)}) scale(${s.toFixed(3)})">
+    <path d="${arms} M-7 58 L-10 92 M7 58 L10 92"/>
+    <polygon class="orange" points="0,17 -19,62 19,62"/>
+    ${tablet}
+    <circle r="19" fill="#ffffff"/>
+    <polygon class="orange" points="0,-19 -13,-29 -13,-12"/><polygon class="orange" points="0,-19 13,-29 13,-12"/>
+    <circle class="dot" cx="${-6 + ox}" cy="-2" r="${eyeR}"/><circle class="dot" cx="${6 + ox}" cy="-2" r="${eyeR}"/>
+    ${brows ? `<path class="thin" d="${brows}"/>` : ''}
+    ${mouth}${extra}
+  </g>`;
+}
+
+function bubble(lines, tipX, tipY, pop) {
+  const size = 27, lh = 32;
+  const w = Math.max(...lines.map(l => textWidth(l, size))) + 40;
+  const h = lines.length * lh + 22;
+  const cx = clamp(tipX, w / 2 + 14, 854 - w / 2 - 14);
+  const x0 = cx - w / 2, x1 = cx + w / 2, y1 = tipY - 28, y0 = y1 - h, r = 16;
+  const tx = clamp(tipX, x0 + r + 14, x1 - r - 14);
+  const d = `M${x0 + r} ${y0} H${x1 - r} A${r} ${r} 0 0 1 ${x1} ${y0 + r} V${y1 - r} A${r} ${r} 0 0 1 ${x1 - r} ${y1} H${tx + 12} L${tipX} ${tipY} L${tx - 12} ${y1} H${x0 + r} A${r} ${r} 0 0 1 ${x0} ${y1 - r} V${y0 + r} A${r} ${r} 0 0 1 ${x0 + r} ${y0} Z`;
+  const k = 0.85 + 0.15 * pop;
+  const text = lines.map((l, i) => `<text class="txt" x="${cx}" y="${y0 + 36 + i * lh}" font-size="${size}" text-anchor="middle">${l}</text>`).join('');
+  return `<g transform="translate(${tipX} ${tipY}) scale(${k.toFixed(3)}) translate(${-tipX} ${-tipY})"><path class="ink thin" fill="#ffffff" d="${d}"/>${text}</g>`;
+}
+
+function scene(tRaw) {
+  const t = Math.floor(tRaw * 12) / 12;           // poses move "on twos", like hand-drawn animation
+  const line = LINES.find(l => between(tRaw, l.a, l.b));
+  let out = `<path d="M40 ${GROUND + 2} H814" fill="none" stroke="#050505" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>`;
+
+  // 0:00 — a close-up of the stuck tablet, shown while she is alone
+  if (t < 4.7) {
+    const p = seg(t, 0.2, 1.0) * (1 - seg(t, 4.3, 4.7));
+    const spin = Math.floor(t * 8) * 45;
+    out += `<g class="ink">
+      <rect x="215" y="135" width="240" height="165" rx="14" ${draw(p)}/>
+      <path class="hair" stroke-dasharray="3 9" opacity="${p.toFixed(2)}" d="M455 150 L604 338 M455 288 L604 372"/>
+      ${p > 0.9 ? `<path class="wave" transform="rotate(${spin} 335 200)" d="M361 200 A26 26 0 1 1 335 174"/>
+      <text class="txt" x="335" y="272" font-size="30" text-anchor="middle">Loading...</text>` : ''}
+    </g>`;
+  }
+
+  // 0:12 — the router is drawn in on a small table
+  if (t >= 12.0) {
+    const p1 = seg(t, 12.0, 12.7), p2 = seg(t, 12.5, 13.3);
+    const blink = Math.floor(t * 4) % 3;
+    out += `<g class="ink">
+      <path d="M340 372 H500 M356 372 L350 ${GROUND} M484 372 L490 ${GROUND}" ${draw(p1)}/>
+      <rect x="375" y="338" width="90" height="30" rx="6" fill="#ffffff" ${draw(p2)}/>
+      <path d="M391 338 L383 306 M449 338 L457 306" ${draw(p2)}/>
+      ${p2 >= 1 ? [0, 1, 2].map(i => `<circle class="${i === blink ? 'blue' : 'dot'}" cx="${393 + i * 14}" cy="353" r="${i === blink ? 4 : 3}"/>`).join('') : ''}
+    </g>`;
+    if (between(t, 13.4, 23.3)) out += `<text class="txt" x="420" y="290" font-size="28" text-anchor="middle">router</text>`;
+  }
+
+  // 0:23 — "there's no wire": a dotted gap between router and tablet
+  if (between(t, 23.9, 26.5)) {
+    const p = seg(t, 23.9, 24.6);
+    out += `<path class="ink thin" stroke-dasharray="4 12" opacity="${p.toFixed(2)}" d="M476 350 C520 330 570 330 606 348"/>
+      ${p >= 1 ? '<text class="txt" x="541" y="318" font-size="52" text-anchor="middle">?</text>' : ''}`;
+  }
+
+  // 0:26 — "it flies": blue waves leave the antenna
+  if (t >= 26.6) {
+    for (let k = 0; k < 4; k++) {
+      const r = 14 + ((t - 26.6) * 70 + k * 34) % 136;
+      const o = clamp(1.15 - r / 150, 0, 1);
+      out += `<path class="wave" opacity="${o.toFixed(2)}" d="M${457 + r} 306 A${r} ${r} 0 0 0 457 ${306 - r}"/>`;
+    }
+  }
+
+  // Dad walks in at 0:04.6
+  let dadX = null;
+  if (t >= 4.6) {
+    dadX = -90 + 260 * clamp((t - 4.6) / 1.4, 0, 1);
+    const speaking = !!line && line.who === 'dad';
+    const arm = t >= 26.6 ? 'up' : between(t, 12.6, 16.6) ? 'point' : speaking ? 'talk' : 'rest';
+    out += dad(dadX, t, { walk: t < 6.0, arm, speaking });
+  }
+
+  // Daughter
+  const toViewer = seg(t, 16.5, 16.9) * (1 - seg(t, 23.2, 23.5));
+  const kidX = 690 - 30 * toViewer, kidScale = 1 + 0.2 * toViewer;
+  const kidSpeaking = !!line && line.who === 'kid';
+  let face = 'listen', look = 'left', arms = 'tablet', shake = 0;
+  if (t < 5.0) { face = 'lost'; look = t < 2.8 ? 'front' : 'left'; shake = between(t, 0.6, 2.6) ? (Math.floor(t * 6) % 2 ? 7 : -7) : 0; }
+  else if (between(t, 10.0, 12.0)) face = 'curious';
+  else if (between(t, 16.6, 21.7)) { face = 'viewer'; look = 'front'; }
+  else if (between(t, 21.7, 23.3)) { face = 'flat'; look = 'front'; }
+  else if (between(t, 23.3, 26.4)) face = 'curious';
+  else if (t >= 28.0) { face = 'wow'; arms = 'up'; }
+  out += kid(kidX, t, { scale: kidScale, face, look, speaking: kidSpeaking, arms, shake });
+
+  // Speech bubble for whoever is talking
+  if (line) {
+    const pop = seg(tRaw, line.a, line.a + 0.15);
+    if (line.who === 'dad') out += bubble(line.lines, dadX + 14, GROUND - 165 * 1.45 - 44, pop);
+    else out += bubble(line.lines, kidX - 4, GROUND - 92 * 1.45 * kidScale - 50 * kidScale, pop);
+  }
+
+  // 0:28 — title
+  if (t >= 28.3) {
+    const title = 'How does Wi-Fi work?';
+    const n = Math.round(title.length * clamp((t - 28.3) / 0.8, 0, 1));
+    out += `<text class="txt" x="${330 - textWidth(title, 54) / 2}" y="96" font-size="54">${title.slice(0, n)}</text>
+      <path class="wave" ${draw(seg(t, 29.1, 29.5))} d="M132 116 Q230 104 330 114 T528 112"/>`;
+  }
+  return out;
+}
+
+window.renderFrame = function (f) {
+  document.getElementById('grainNoise').setAttribute('seed', 24 + Math.floor(f / 3) % 3);
+  document.getElementById('stage').innerHTML = scene(f / FPS);
+};
+window.TOTAL_FRAMES = FPS * DURATION;
+window.renderFrame(0);
+</script>
+</body>
+</html>
