@@ -2,17 +2,17 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Wi-Fi pilot: first 30 seconds</title>
+<title>Wi-Fi pilot: cold open</title>
 <style>
   html, body { margin: 0; background: #fff; }
   #stage { display: block; width: 854px; height: 480px; background: #fff; filter: url(#onpaper); }
-  .ink { fill: none; stroke: #050505; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
-  .thin { stroke-width: 3.2; }
-  .hair { stroke-width: 2.2; }
+  .ink { fill: none; stroke: #050505; stroke-width: calc(5px * var(--k, 1)); stroke-linecap: round; stroke-linejoin: round; }
+  .thin { stroke-width: calc(3.2px * var(--k, 1)); }
+  .hair { stroke-width: calc(2.2px * var(--k, 1)); }
   .dot { fill: #050505; stroke: none; }
   .blue { fill: #2457d6; stroke: none; }
   .orange { fill: #ee8420; stroke: none; }
-  .wave { fill: none; stroke: #2457d6; stroke-width: 5; stroke-linecap: round; }
+  .wave { fill: none; stroke: #2457d6; stroke-width: calc(5px * var(--k, 1)); stroke-linecap: round; }
   .txt { font-family: "Patrick Hand", "Comic Sans MS", cursive; fill: #050505; stroke: none; }
 </style>
 </head>
@@ -37,25 +37,38 @@
 <svg id="stage" viewBox="0 0 854 480"></svg>
 
 <script>
-const FPS = 24, DURATION = 30, GROUND = 430;
+const FPS = 24, GROUND = 430;
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const ease = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
 const seg = (t, a, b) => ease((t - a) / (b - a));
 const between = (t, a, b) => t >= a && t < b;
 
-// Who says what, and when. `viewer` lines are spoken straight to the camera.
-const LINES = [
-  { who: 'kid', a: 0.6,  b: 2.6,  lines: ["It's stuck AGAIN!"] },
-  { who: 'kid', a: 2.8,  b: 5.0,  lines: ["Dad! The Wi-Fi", "is broken!"] },
-  { who: 'dad', a: 6.0,  b: 10.0, lines: ["It's not broken. You walked", "too far from the router."] },
-  { who: 'kid', a: 10.3, b: 12.0, lines: ["The what?"] },
-  { who: 'dad', a: 13.2, b: 16.4, lines: ["That little box with", "the blinking lights."] },
-  { who: 'kid', a: 16.8, b: 21.6, lines: ["Be honest. Do YOU know", "how a cartoon gets from", "that box into my tablet?"], viewer: true },
-  { who: 'kid', a: 21.8, b: 23.2, lines: ["...Me neither."], viewer: true },
-  { who: 'kid', a: 23.5, b: 26.3, lines: ["There's no wire, Dad.", "How does it get in?"] },
-  { who: 'dad', a: 26.6, b: 27.9, lines: ["It flies."] },
-  { who: 'kid', a: 28.1, b: 30.1, lines: ["It FLIES?!"] },
-];
+// Lines come from lines.json; `dur` is the length of each voice clip in seconds.
+// setup() places every line and action on the clock, so the picture follows the audio.
+let LINES = [], L = {}, T = {};
+window.setup = function (lines) {
+  LINES = lines; L = {}; T = {};
+  lines.forEach(l => { L[l.id] = l; });
+  let t = 0.5;
+  const say = id => { L[id].a = t; L[id].b = t + L[id].dur; t = L[id].b; };
+  say('k1'); t += 0.2; say('k2');
+  T.walkA = L.k2.a + 0.4; T.walkB = T.walkA + 1.4;            // dad walks in while she shouts
+  t = Math.max(L.k2.b + 0.3, T.walkB + 0.15); say('d1');
+  t += 0.25; say('k3');
+  T.router = L.k3.b - 0.1;                                    // router is drawn in
+  t = T.router + 0.7; say('d2');
+  T.pointA = T.router + 0.3; T.pointB = L.d2.b + 0.3;
+  t += 0.35; T.zoomIn = t; t += 0.3; say('k4');               // close-up: she talks to the viewer
+  t += 0.35; say('k5');
+  t += 0.3; T.zoomOut = t; t += 0.3; say('k6');
+  T.gap = L.k6.a + 0.3;
+  t += 0.25; say('d3'); T.waves = L.d3.a + 0.15;
+  t += 0.2; say('k7'); T.title = L.k7.a + 0.5;
+  T.end = Math.max(L.k7.b, T.title + 1.4) + 1.2;
+  window.TIMELINE = { lines: lines.map(l => ({ id: l.id, a: l.a, b: l.b })), end: T.end };
+  window.TOTAL_FRAMES = Math.ceil(T.end * FPS);
+  window.renderFrame(0);
+};
 
 const measureEl = document.getElementById('measure');
 function textWidth(s, size) {
@@ -155,14 +168,16 @@ function bubble(lines, tipX, tipY, pop) {
   return `<g transform="translate(${tipX} ${tipY}) scale(${k.toFixed(3)}) translate(${-tipX} ${-tipY})"><path class="ink thin" fill="#ffffff" d="${d}"/>${text}</g>`;
 }
 
+const CLOSE_UP = 2.5;   // how far the camera pushes in for a to-viewer line
+
 function scene(tRaw) {
   const t = Math.floor(tRaw * 12) / 12;           // poses move "on twos", like hand-drawn animation
   const line = LINES.find(l => between(tRaw, l.a, l.b));
   let out = `<path d="M40 ${GROUND + 2} H814" fill="none" stroke="#050505" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>`;
 
-  // 0:00 — a close-up of the stuck tablet, shown while she is alone
-  if (t < 4.7) {
-    const p = seg(t, 0.2, 1.0) * (1 - seg(t, 4.3, 4.7));
+  // A close-up of the stuck tablet, shown while she is alone
+  if (t < T.walkA + 0.3) {
+    const p = seg(t, 0.2, 1.0) * (1 - seg(t, T.walkA - 0.1, T.walkA + 0.3));
     const spin = Math.floor(t * 8) * 45;
     out += `<g class="ink">
       <rect x="215" y="135" width="240" height="165" rx="14" ${draw(p)}/>
@@ -172,9 +187,9 @@ function scene(tRaw) {
     </g>`;
   }
 
-  // 0:12 — the router is drawn in on a small table
-  if (t >= 12.0) {
-    const p1 = seg(t, 12.0, 12.7), p2 = seg(t, 12.5, 13.3);
+  // The router is drawn in on a small table
+  if (t >= T.router) {
+    const p1 = seg(t, T.router, T.router + 0.7), p2 = seg(t, T.router + 0.5, T.router + 1.3);
     const blink = Math.floor(t * 4) % 3;
     out += `<g class="ink">
       <path d="M340 372 H500 M356 372 L350 ${GROUND} M484 372 L490 ${GROUND}" ${draw(p1)}/>
@@ -182,70 +197,81 @@ function scene(tRaw) {
       <path d="M391 338 L383 306 M449 338 L457 306" ${draw(p2)}/>
       ${p2 >= 1 ? [0, 1, 2].map(i => `<circle class="${i === blink ? 'blue' : 'dot'}" cx="${393 + i * 14}" cy="353" r="${i === blink ? 4 : 3}"/>`).join('') : ''}
     </g>`;
-    if (between(t, 13.4, 23.3)) out += `<text class="txt" x="420" y="290" font-size="28" text-anchor="middle">router</text>`;
+    if (between(t, T.router + 1.4, L.k6.a)) out += `<text class="txt" x="420" y="290" font-size="28" text-anchor="middle">router</text>`;
   }
 
-  // 0:23 — "there's no wire": a dotted gap between router and tablet
-  if (between(t, 23.9, 26.5)) {
-    const p = seg(t, 23.9, 24.6);
+  // "There's no wire": a dotted gap between router and tablet
+  if (between(t, T.gap, L.d3.a)) {
+    const p = seg(t, T.gap, T.gap + 0.6);
     out += `<path class="ink thin" stroke-dasharray="4 12" opacity="${p.toFixed(2)}" d="M476 350 C520 330 570 330 606 348"/>
       ${p >= 1 ? '<text class="txt" x="541" y="318" font-size="52" text-anchor="middle">?</text>' : ''}`;
   }
 
-  // 0:26 — "it flies": blue waves leave the antenna
-  if (t >= 26.6) {
+  // "It flies": blue waves leave the antenna
+  if (t >= T.waves) {
     for (let k = 0; k < 4; k++) {
-      const r = 14 + ((t - 26.6) * 70 + k * 34) % 136;
+      const r = 14 + ((t - T.waves) * 70 + k * 34) % 136;
       const o = clamp(1.15 - r / 150, 0, 1);
       out += `<path class="wave" opacity="${o.toFixed(2)}" d="M${457 + r} 306 A${r} ${r} 0 0 0 457 ${306 - r}"/>`;
     }
   }
 
-  // Dad walks in at 0:04.6
-  let dadX = null;
-  if (t >= 4.6) {
-    dadX = -90 + 260 * clamp((t - 4.6) / 1.4, 0, 1);
+  // Dad
+  let dadX = 170;
+  if (t >= T.walkA) {
+    dadX = -90 + 260 * clamp((t - T.walkA) / 1.4, 0, 1);
     const speaking = !!line && line.who === 'dad';
-    const arm = t >= 26.6 ? 'up' : between(t, 12.6, 16.6) ? 'point' : speaking ? 'talk' : 'rest';
-    out += dad(dadX, t, { walk: t < 6.0, arm, speaking });
+    const arm = t >= L.d3.a ? 'up' : between(t, T.pointA, T.pointB) ? 'point' : speaking ? 'talk' : 'rest';
+    out += dad(dadX, t, { walk: t < T.walkB, arm, speaking });
   }
 
   // Daughter
-  const toViewer = seg(t, 16.5, 16.9) * (1 - seg(t, 23.2, 23.5));
-  const kidX = 690 - 30 * toViewer, kidScale = 1 + 0.2 * toViewer;
+  const kidX = 690;
   const kidSpeaking = !!line && line.who === 'kid';
+  const zoomed = between(t, T.zoomIn, T.zoomOut + 0.15);
   let face = 'listen', look = 'left', arms = 'tablet', shake = 0;
-  if (t < 5.0) { face = 'lost'; look = t < 2.8 ? 'front' : 'left'; shake = between(t, 0.6, 2.6) ? (Math.floor(t * 6) % 2 ? 7 : -7) : 0; }
-  else if (between(t, 10.0, 12.0)) face = 'curious';
-  else if (between(t, 16.6, 21.7)) { face = 'viewer'; look = 'front'; }
-  else if (between(t, 21.7, 23.3)) { face = 'flat'; look = 'front'; }
-  else if (between(t, 23.3, 26.4)) face = 'curious';
-  else if (t >= 28.0) { face = 'wow'; arms = 'up'; }
-  out += kid(kidX, t, { scale: kidScale, face, look, speaking: kidSpeaking, arms, shake });
+  if (t < L.d1.a - 0.1) { face = 'lost'; look = t < L.k2.a ? 'front' : 'left'; shake = between(t, L.k1.a, L.k1.b) ? (Math.floor(t * 6) % 2 ? 7 : -7) : 0; }
+  else if (between(t, L.k3.a - 0.2, L.k3.b + 0.2)) face = 'curious';
+  else if (zoomed) { face = t < L.k4.b + 0.2 ? 'viewer' : 'flat'; look = 'front'; }
+  else if (between(t, L.k6.a - 0.1, L.k6.b + 0.1)) face = 'curious';
+  else if (t >= L.k7.a - 0.05) { face = 'wow'; arms = 'up'; }
+  out += kid(kidX, t, { scale: 1, face, look, speaking: kidSpeaking, arms, shake });
 
-  // Speech bubble for whoever is talking
-  if (line) {
+  // Speech bubble in the wide shot (to-viewer lines get a caption beside the close-up instead)
+  if (line && !line.viewer) {
     const pop = seg(tRaw, line.a, line.a + 0.15);
-    if (line.who === 'dad') out += bubble(line.lines, dadX + 14, GROUND - 165 * 1.45 - 44, pop);
-    else out += bubble(line.lines, kidX - 4, GROUND - 92 * 1.45 * kidScale - 50 * kidScale, pop);
+    if (line.who === 'dad') out += bubble(line.show, dadX + 14, GROUND - 165 * 1.45 - 44, pop);
+    else out += bubble(line.show, kidX - 4, GROUND - 92 * 1.45 - 50, pop);
   }
 
-  // 0:28 — title
-  if (t >= 28.3) {
+  // Title
+  if (t >= T.title) {
     const title = 'How does Wi-Fi work?';
-    const n = Math.round(title.length * clamp((t - 28.3) / 0.8, 0, 1));
+    const n = Math.round(title.length * clamp((t - T.title) / 0.8, 0, 1));
     out += `<text class="txt" x="${330 - textWidth(title, 54) / 2}" y="96" font-size="54">${title.slice(0, n)}</text>
-      <path class="wave" ${draw(seg(t, 29.1, 29.5))} d="M132 116 Q230 104 330 114 T528 112"/>`;
+      <path class="wave" ${draw(seg(t, T.title + 0.8, T.title + 1.2))} d="M132 116 Q230 104 330 114 T528 112"/>`;
   }
-  return out;
+
+  // Camera: push in on whoever is talking to the viewer, so only they are in frame
+  const p = seg(tRaw, T.zoomIn, T.zoomIn + 0.28) * (1 - seg(tRaw, T.zoomOut, T.zoomOut + 0.28));
+  if (p <= 0) return out;
+  const who = (LINES.find(l => l.viewer) || {}).who;
+  const focus = who === 'dad' ? { x: dadX - 10, y: 232, sx: 560 } : { x: kidX - 22, y: 312, sx: 250 };
+  const z = 1 + (CLOSE_UP - 1) * p;
+  const cx = 427 + (focus.x - 427) * p, cy = 240 + (focus.y - 240) * p, sx = 427 + (focus.sx - 427) * p;
+  let shot = `<g style="--k:${Math.pow(z, -0.45).toFixed(3)}" transform="translate(${sx.toFixed(1)} 240) scale(${z.toFixed(3)}) translate(${(-cx).toFixed(1)} ${(-cy).toFixed(1)})">${out}</g>`;
+  if (line && line.viewer && p > 0.95) {
+    const capX = who === 'dad' ? 215 : 630, size = 36, lh = 44;
+    const y0 = 240 - (line.show.length - 1) * lh / 2 + 12;
+    shot += line.show.map((s, i) => `<text class="txt" x="${capX}" y="${y0 + i * lh}" font-size="${size}" text-anchor="middle">${s}</text>`).join('');
+  }
+  return shot;
 }
 
 window.renderFrame = function (f) {
   document.getElementById('grainNoise').setAttribute('seed', 24 + Math.floor(f / 3) % 3);
   document.getElementById('stage').innerHTML = scene(f / FPS);
 };
-window.TOTAL_FRAMES = FPS * DURATION;
-window.renderFrame(0);
 </script>
 </body>
 </html>

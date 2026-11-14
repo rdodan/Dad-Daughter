@@ -1,0 +1,12 @@
+[
+  { "id": "k1", "who": "kid", "say": "[frustrated] Ugh! It's stuck AGAIN!", "show": ["Ugh! It's stuck AGAIN!"] },
+  { "id": "k2", "who": "kid", "say": "[shouting] Dad! The Wi-Fi is broken!", "show": ["Dad! The Wi-Fi", "is broken!"] },
+  { "id": "d1", "who": "dad", "say": "[calm, amused] It's not broken. You walked too far from the router.", "show": ["It's not broken. You walked", "too far from the router."] },
+  { "id": "k3", "who": "kid", "say": "[confused] The what?", "show": ["The what?"] },
+  { "id": "d2", "who": "dad", "say": "[warmly] That little box with the blinking lights.", "show": ["That little box with", "the blinking lights."] },
+  { "id": "k4", "who": "kid", "viewer": true, "say": "[curious, speaking quietly] Be honest. Do YOU know how a cartoon gets from that box into my tablet?", "show": ["Be honest. Do YOU know", "how a cartoon gets from", "that box into my tablet?"] },
+  { "id": "k5", "who": "kid", "viewer": true, "say": "[deadpan] Me neither.", "show": ["...Me neither."] },
+  { "id": "k6", "who": "kid", "say": "[puzzled] There's no wire, Dad. How does it get in?", "show": ["There's no wire, Dad.", "How does it get in?"] },
+  { "id": "d3", "who": "dad", "say": "[matter-of-fact] It flies.", "show": ["It flies."] },
+  { "id": "k7", "who": "kid", "say": "[gasps] [shocked] It FLIES?!", "show": ["It FLIES?!"] }
+]

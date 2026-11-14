@@ -6,7 +6,7 @@ Target length: about 3 minutes 30 seconds. Lines marked **(to viewer)** are said
 
 *Daughter alone, holding a tablet. A loading circle spins on it.*
 
-**DAUGHTER:** It's stuck AGAIN! Dad! The Wi-Fi is broken!
+**DAUGHTER:** Ugh! It's stuck AGAIN! Dad! The Wi-Fi is broken!
 
 *Dad walks in.*
 
