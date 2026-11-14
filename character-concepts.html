@@ -10,7 +10,7 @@
     --muted: #586172;
     --line: #cdd3de;
     --paper: #ffffff;      /* the video background: white in both themes */
-    --ink: #1b1b1b;        /* marker black, always drawn on paper */
+    --ink: #050505;        /* marker black, always drawn on paper */
     --blue: #2457d6;       /* dad's colour */
     --orange: #ee8420;     /* daughter's colour */
     --pick-bg: #171a21;
@@ -70,8 +70,8 @@
   .face span { font-family: var(--hand); font-size: 1.25rem; text-align: center; }
 
   /* drawing styles */
-  .ink { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
-  .thin { stroke-width: 2.5; }
+  .ink { fill: none; stroke: var(--ink); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+  .thin { stroke-width: 3.2; }
   .fat { stroke-width: 6; }
   .dot { fill: var(--ink); stroke: none; }
   .blue { fill: var(--blue); stroke: none; }
@@ -90,7 +90,7 @@
       <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
       <feFlood flood-color="#ffffff" result="white"/>
       <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
-      <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.42" k2="1" k3="0.42" k4="0" result="inked"/>
+      <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.2" k2="1" k3="0.2" k4="0" result="inked"/>
       <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
       <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
       <feBlend in="light" in2="inked" mode="hard-light"/>
@@ -103,7 +103,7 @@
       <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
       <feFlood flood-color="#ffffff" result="white"/>
       <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
-      <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.42" k2="1" k3="0.42" k4="0" result="inked"/>
+      <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.2" k2="1" k3="0.2" k4="0" result="inked"/>
       <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
       <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
       <feBlend in="light" in2="inked" mode="hard-light"/>
@@ -116,7 +116,7 @@
       <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
       <feFlood flood-color="#ffffff" result="white"/>
       <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
-      <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.42" k2="1" k3="0.42" k4="0" result="inked"/>
+      <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.2" k2="1" k3="0.2" k4="0" result="inked"/>
       <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
       <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
       <feBlend in="light" in2="inked" mode="hard-light"/>
@@ -129,7 +129,7 @@
       <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
       <feFlood flood-color="#ffffff" result="white"/>
       <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
-      <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.42" k2="1" k3="0.42" k4="0" result="inked"/>
+      <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.2" k2="1" k3="0.2" k4="0" result="inked"/>
       <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
       <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
       <feBlend in="light" in2="inked" mode="hard-light"/>
