@@ -1,2 +1,3 @@
 # Large renders: delivered as files, not kept in git (GitHub refuses files over 100 MB)
 video/*-1080p.mp4
+video/plates/

@@ -243,7 +243,34 @@ function speech(line, dadX, kidX, tRaw) {
     : bubble(pg.lines, kidX - 4, GROUND - 92 * 1.45 - 50, pop);
 }
 
+// Fast paper. When render.js sets window.PAPER_PLATES (the plates made once by make-plates.js),
+// the creases, their lighting and the ink grain are read from images instead of being computed
+// for every frame; only bending and inking the drawing is done per frame. Same look, much faster.
+function installPlates(dir) {
+  const old = document.getElementById('onpaper');
+  // dir is a map of plate name -> data: URL. (A plate loaded from a file is refused as a
+  // displacement map by the browser's security rules; embedded data is allowed.)
+  const img = (name, res) => `<feImage href="${dir[name]}" x="0" y="0" width="854" height="480" preserveAspectRatio="none" result="${res}"/>`;
+  let defs = '';
+  for (let n = 0; n < 3; n++) {
+    defs += `<filter id="onpaper${n}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      ${img('crease', 'crease')}${img(`grain-${n}`, 'grainRaw')}
+      <feColorMatrix in="grainRaw" type="matrix" values="2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  0 0 0 0 1" result="grain"/>
+      <feDisplacementMap in="SourceGraphic" in2="crease" scale="10" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+      <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
+      <feFlood flood-color="#ffffff" result="white"/>
+      <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
+      <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.2" k2="1" k3="0.2" k4="0" result="inked"/>
+      ${img('light', 'light')}
+      <feBlend in="light" in2="inked" mode="hard-light"/>
+    </filter>`;
+  }
+  old.insertAdjacentHTML('afterend', defs);
+}
+if (window.PAPER_PLATES) installPlates(window.PAPER_PLATES);
+
 window.renderFrame = function (f) {
-  document.getElementById('grainNoise').setAttribute('seed', 24 + Math.floor(f / 3) % 3);
+  if (window.PAPER_PLATES) document.getElementById('stage').style.filter = `url(#onpaper${Math.floor(f / 3) % 3})`;
+  else document.getElementById('grainNoise').setAttribute('seed', 24 + Math.floor(f / 3) % 3);
   document.getElementById('stage').innerHTML = scene(f / FPS);
 };
