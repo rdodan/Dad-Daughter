@@ -128,7 +128,6 @@ Things that went wrong and should not be repeated:
 
 ## Open items
 
-- Channel name not chosen.
 - The dad voice (Chris) is provisional until the owner confirms it.
 - Only the first 30 seconds of the pilot are animated; the rest of the script has no animation or audio.
 - Whether to keep speech bubbles in wide shots now that there are voices.
