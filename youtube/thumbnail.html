@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Thumbnail: Dad, how does Wi-Fi work?</title>
+<style>
+  html, body { margin: 0; background: #fff; }
+  #stage { display: block; width: 854px; height: 480px; background: #fff; filter: url(#onpaper); }
+  .ink { fill: none; stroke: #050505; stroke-width: calc(5px * var(--k, 1)); stroke-linecap: round; stroke-linejoin: round; }
+  .thin { stroke-width: calc(3.2px * var(--k, 1)); }
+  .hair { stroke-width: calc(2.2px * var(--k, 1)); }
+  .dot { fill: #050505; stroke: none; }
+  .blue { fill: #2457d6; stroke: none; }
+  .orange { fill: #ee8420; stroke: none; }
+  .wave { fill: none; stroke: #2457d6; stroke-width: calc(5px * var(--k, 1)); stroke-linecap: round; }
+  .txt { font-family: "Patrick Hand", "Comic Sans MS", cursive; fill: #050505; stroke: none; }
+</style>
+</head>
+<body>
+<!-- The paper: creases stay still, the ink grain changes every few frames so the lines feel hand-drawn. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="onpaper" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feTurbulence type="turbulence" baseFrequency="0.006 0.008" numOctaves="5" seed="17" result="crease"/>
+    <feTurbulence id="grainNoise" type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="24" result="grainRaw"/>
+    <feColorMatrix in="grainRaw" type="matrix" values="2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  0 0 0 0 1" result="grain"/>
+    <feDisplacementMap in="SourceGraphic" in2="crease" scale="10" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+    <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
+    <feFlood flood-color="#ffffff" result="white"/>
+    <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
+    <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.2" k2="1" k3="0.2" k4="0" result="inked"/>
+    <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
+    <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
+    <feBlend in="light" in2="inked" mode="hard-light"/>
+  </filter>
+</defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><text id="measure" class="txt" font-size="27"></text></svg>
+<svg id="stage" viewBox="0 0 854 480"></svg>
+<script src="../video/common.js"></script>
+<script>
+// YouTube thumbnail, drawn with the show's own characters and paper. Rendered at 1.5x (1280x720).
+// ?v=a  "It FLIES?!"           her amazed, waves flying from the router
+// ?v=b  "INVISIBLE LIGHT?"     same scene, different words, for YouTube's thumbnail test
+let LINES = [];
+const V = new URLSearchParams(location.search).get('v') || 'a';
+
+function big(svg, x, y, s) {          // scale a character about a point on the ground
+  return `<g transform="translate(${x} ${y}) scale(${s}) translate(${-x} ${-GROUND})">${svg}</g>`;
+}
+
+function scene() {
+  let out = '';
+  // waves from the router to her tablet
+  const rx = 390, ry = 330;
+  for (let k = 0; k < 4; k++) {
+    const r = 40 + k * 46;
+    out += `<path class="wave" stroke-width="${9 - k}" opacity="${(1 - k * 0.18).toFixed(2)}" d="M${rx + r * 0.5} ${ry - r * 0.87} A${r} ${r} 0 0 1 ${rx + r} ${ry}"/>`;
+  }
+  out += `<g class="ink" transform="translate(${rx - 70} ${ry + 30}) scale(1.4)">
+    <rect x="-45" y="-15" width="90" height="30" rx="6" fill="#ffffff"/><path d="M-29 -15 L-37 -47 M29 -15 L37 -47"/>
+    <circle class="dot" cx="-27" cy="0" r="3"/><circle class="blue" cx="-13" cy="0" r="5"/><circle class="dot" cx="1" cy="0" r="3"/></g>`;
+  // flying blue specks
+  [[470, 250], [520, 215], [575, 200], [628, 210]].forEach(([x, y], i) => out += `<circle class="blue" cx="${x}" cy="${y}" r="${7 - i * 0.6}"/>`);
+  // dad, pointing, grinning
+  out += big(dad(120, 0, { face: 'grin', arm: 'point', tilt: -6 }), 120, V === 'b' ? 540 : 500, V === 'b' ? 1.05 : 1.25);
+  // her, amazed, tablet up
+  out += big(kid(700, 0.3, { scale: 1, face: 'wow', look: 'front', arms: 'up', mouth: 0.6 }), 700, 520, 2.0);
+  // the words
+  const words = V === 'b' ? ['INVISIBLE', 'LIGHT?!'] : ['It FLIES?!'];
+  if (words.length === 1) {
+    out += `<text class="txt" x="40" y="128" font-size="118">${words[0]}</text>
+      <path class="wave" stroke-width="10" d="M44 154 Q190 138 330 150 T560 146"/>`;
+  } else {
+    out += `<text class="txt" x="34" y="104" font-size="92">${words[0]}</text>
+      <text class="txt" x="34" y="188" font-size="92">${words[1]}</text>
+      <path class="wave" stroke-width="10" d="M40 210 Q130 200 220 207 T400 204"/>`;
+  }
+  return out;
+}
+window.addEventListener('load', () => window.renderFrame(0));
+</script>
+</body>
+</html>
