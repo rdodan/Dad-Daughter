@@ -1,0 +1,16 @@
+[
+  { "id": "k21", "who": "kid", "show": ["And why is it slow", "when you and Mom", "are on it too?"] },
+  { "id": "d17", "who": "dad", "show": ["The router has to share its blinks", "between all of us.", "More people, less for each."] },
+  { "id": "k22", "who": "kid", "show": ["So it's", "your fault."] },
+  { "id": "d18", "who": "dad", "show": ["...Sometimes."] },
+  { "id": "k23", "who": "kid", "show": ["Last one. Why does", "it need a password?"] },
+  { "id": "d19", "who": "dad", "show": ["The light goes through our walls", "into the neighbors' house too.", "The password scrambles our blinks", "so only our gadgets can read them."] },
+  { "id": "k24", "who": "kid", "show": ["So nobody can", "watch my cartoons."] },
+  { "id": "d20", "who": "dad", "show": ["Nobody wants to", "watch your cartoons."] },
+  { "id": "d21", "who": "dad", "show": ["Okay. Your turn.", "How does Wi-Fi work?"] },
+  { "id": "k25", "who": "kid", "show": ["The box is a lamp", "with invisible light.", "It blinks really fast", "in a secret code.", "My tablet reads", "the blinks.", "And walls eat", "the light."] },
+  { "id": "d22", "who": "dad", "show": ["That's... actually right."] },
+  { "id": "k26", "who": "kid", "viewer": true, "show": ["Now you know too.", "What should Dad", "explain next? Tell us", "in the comments."] },
+  { "id": "k27", "who": "kid", "show": ["Dad, what's inside", "the ocean cable?"] },
+  { "id": "d23", "who": "dad", "show": ["Next time."] }
+]

@@ -67,6 +67,8 @@ AI-made animated explainer channels are multiplying fast (searches for "animated
 | `video/audio/<scene>.flac`, `<scene>.json` | The owner's recording for a scene, and each line's start, end and per-word times in it. |
 | `video/invisible-light-480p.mp4` | Scene 2 rendered, about 61 seconds. |
 | `video/cartoon-and-stuck.html`, `video/lines-cartoon-and-stuck.json`, `video/cartoon-and-stuck-480p.mp4` | Scenes 3 and 4 ("Where the cartoon lives" and "Why it gets stuck"), one recording, about 65 seconds: the cable's journey scrolling past wall, street, ocean and giant computer as each is named; the round trip of the request and the cartoon pieces; an eye that blinks on "blink"; a floor plan where the rings weaken at each wall; a lamp whose light is cut off when the door shuts. |
+| `video/final.html`, `video/lines-final.json`, `video/final-480p.mp4` | Scenes 5 and 6 ("Two quick ones" and "She explains it back"), about 54 seconds: the router sharing blinks among the family's gadgets (more join on "more people"); our house and the neighbors', with a padlock and scrambled symbols on "password"; her recap drawn picture by picture as she says it, ticked on "actually right"; the ocean cable and "Next time!". |
+| `video/wifi-episode-480p.mp4` | The whole pilot episode, all sections joined: 3 min 18 s. Rebuild with the ffmpeg `concat` filter over the four section MP4s in order (cold-open, invisible-light, cartoon-and-stuck, final). |
 | `video/render.js` | Renders every frame in headless Chromium, mixes the audio, encodes the MP4. `--track <file>` uses one outside recording instead of the per-line clips. |
 | `video/import-audio.js` | Brings in a recording made elsewhere and finds each line's timing in it. |
 | `video/cold-open-480p.mp4` | Current result: about 26 seconds, 854×480, 24 fps, with voices. |
@@ -138,8 +140,7 @@ Things that went wrong and should not be repeated:
 ## Open items
 
 - The owner now makes the audio themselves (cold open sped up to 1.11×) and sends it as a file; use `import-audio.js` and `render.js --track`. The owner approved the cold open made this way. The ElevenLabs pipeline in `voices.js` is a fallback.
-- Sections done: cold open, invisible light, where the cartoon lives + why it gets stuck. Still to come from the owner: "Two quick ones", "She explains it back". For each: write `lines-<scene>.json` from `scripts/wifi-pilot.md`, import the recording, build `<scene>.html` on `common.js` (copy the head of an existing scene), check stills, render.
-- Rendered sections are separate MP4s; joining them into one episode is not done yet.
+- All sections of the Wi-Fi pilot are animated and joined into `video/wifi-episode-480p.mp4`. The owner's recordings are all at 1.11× speed (the first part 2+3 file was 1×; it was replaced). For each: write `lines-<scene>.json` from `scripts/wifi-pilot.md`, import the recording, build `<scene>.html` on `common.js` (copy the head of an existing scene), check stills, render.
 - Keep her bubble lines short (two short lines): long kid bubbles overlap the drawing board.
 - Whether to keep speech bubbles in wide shots now that there are voices.
 - The daughter character has no name; the dad calls her nothing specific in the script.

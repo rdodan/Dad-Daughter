@@ -1,0 +1,251 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Wi-Fi pilot: two quick ones, she explains it back</title>
+<style>
+  html, body { margin: 0; background: #fff; }
+  #stage { display: block; width: 854px; height: 480px; background: #fff; filter: url(#onpaper); }
+  .ink { fill: none; stroke: #050505; stroke-width: calc(5px * var(--k, 1)); stroke-linecap: round; stroke-linejoin: round; }
+  .thin { stroke-width: calc(3.2px * var(--k, 1)); }
+  .hair { stroke-width: calc(2.2px * var(--k, 1)); }
+  .dot { fill: #050505; stroke: none; }
+  .blue { fill: #2457d6; stroke: none; }
+  .orange { fill: #ee8420; stroke: none; }
+  .wave { fill: none; stroke: #2457d6; stroke-width: calc(5px * var(--k, 1)); stroke-linecap: round; }
+  .txt { font-family: "Patrick Hand", "Comic Sans MS", cursive; fill: #050505; stroke: none; }
+</style>
+</head>
+<body>
+<!-- The paper: creases stay still, the ink grain changes every few frames so the lines feel hand-drawn. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="onpaper" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feTurbulence type="turbulence" baseFrequency="0.006 0.008" numOctaves="5" seed="17" result="crease"/>
+    <feTurbulence id="grainNoise" type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="24" result="grainRaw"/>
+    <feColorMatrix in="grainRaw" type="matrix" values="2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  0 0 0 0 1" result="grain"/>
+    <feDisplacementMap in="SourceGraphic" in2="crease" scale="10" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+    <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
+    <feFlood flood-color="#ffffff" result="white"/>
+    <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
+    <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.2" k2="1" k3="0.2" k4="0" result="inked"/>
+    <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
+    <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
+    <feBlend in="light" in2="inked" mode="hard-light"/>
+  </filter>
+</defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><text id="measure" class="txt" font-size="27"></text></svg>
+<svg id="stage" viewBox="0 0 854 480"></svg>
+<script src="common.js"></script>
+<script>
+// Scenes 5 and 6, "Two quick ones" and "She explains it back", as one recording.
+let LINES = [], L = {}, T = {};
+const DAD_X = 170, KID_X = 690;
+const PANEL = { x: 285, y: 126, w: 290, h: 160 };
+const PCX = PANEL.x + PANEL.w / 2, PCY = PANEL.y + PANEL.h / 2;
+
+window.setup = function (lines, opts = {}) {
+  LINES = lines; L = {}; T = {}; EVENTS = opts.events || [];
+  lines.forEach(l => { L[l.id] = l; });
+  const w = (id, word, nth = 0, f = null) => { const x = wordTime(L[id], word, nth); return x == null ? f : x; };
+  T.board = L.k21.a + 0.3;
+  T.share = w('d17', 'share', 0, L.d17.a + 1);
+  T.more = w('d17', 'more', 0, L.d17.a + 3);
+  T.fault = L.k22.a;
+  T.house = L.k23.a;
+  T.neighbors = w('d19', 'neighbors', 0, L.d19.a + 2);
+  T.password = w('d19', 'password', 0, L.d19.a + 3.6);
+  T.scramble = w('d19', 'scrambles', 0, L.d19.a + 4.2);
+  T.gadgets = w('d19', 'gadgets', 0, L.d19.b - 0.8);
+  T.turn = L.d21.a;
+  T.recap = [w('k25', 'lamp'), w('k25', 'blinks'), w('k25', 'tablet'), w('k25', 'walls')].map((x, i) => x == null ? L.k25.a + i * 2 : x);
+  T.right = L.d22.a;
+  T.cable = L.k27.a;
+  T.next = L.d23.a;
+  T.throat = (EVENTS.find(e => /throat|cough/i.test(e.text)) || {});
+  T.shots = [[Math.max(L.d22.b, L.k26.a - 0.3), Math.min(L.k26.b + 0.1, L.k27.a - 0.3)]];
+  T.end = Math.max(opts.duration || 0, L.d23.b) + 1.6;
+  window.TIMELINE = { lines: LINES.map(l => ({ id: l.id, a: l.a, b: l.b })), end: T.end };
+  window.TOTAL_FRAMES = Math.ceil(T.end * FPS);
+  window.renderFrame(0);
+};
+
+// ---- small drawings ----
+function routerIcon(x, y, s = 0.6) {
+  return `<g class="ink" transform="translate(${x} ${y}) scale(${s})">
+    <rect x="-45" y="-15" width="90" height="30" rx="6" fill="#ffffff"/><path d="M-29 -15 L-37 -47 M29 -15 L37 -47"/>
+    <circle class="dot" cx="-27" cy="0" r="3"/><circle class="blue" cx="-13" cy="0" r="4"/><circle class="dot" cx="1" cy="0" r="3"/></g>`;
+}
+function gadget(kind, x, y) {
+  if (kind === 'tablet') return `<rect class="ink thin" x="${x - 14}" y="${y - 10}" width="28" height="20" rx="3" fill="#ffffff"/>`;
+  if (kind === 'laptop') return `<g class="ink thin"><rect x="${x - 13}" y="${y - 12}" width="26" height="17" rx="2" fill="#ffffff"/><path d="M${x - 18} ${y + 8} H${x + 18}"/></g>`;
+  return `<rect class="ink thin" x="${x - 7}" y="${y - 12}" width="14" height="24" rx="3" fill="#ffffff"/>`;
+}
+function house(x, y, wdt, hgt) {
+  return `<path class="ink" d="M${x} ${y + hgt} V${y + 22} L${x + wdt / 2} ${y} L${x + wdt} ${y + 22} V${y + hgt} Z" fill="none"/>`;
+}
+function padlock(x, y, p) {
+  return `<g class="ink thin" transform="translate(${x} ${y}) scale(${(0.6 + 0.4 * p).toFixed(2)})" opacity="${p.toFixed(2)}">
+    <path d="M-8 -4 V-12 A8 8 0 0 1 8 -12 V-4"/><rect x="-12" y="-4" width="24" height="18" rx="3" fill="#ffffff"/><circle class="dot" cx="0" cy="5" r="2.5"/></g>`;
+}
+
+// The router shares its blinks: one packet at a time goes to each gadget in turn.
+function sharing(tRaw, t) {
+  const rx = PANEL.x + 62, ry = PCY + 16;
+  const people = [['tablet', 'you'], ['phone', 'Dad'], ['laptop', 'Mom']];
+  const extra = [['phone', ''], ['tablet', ''], ['phone', '']];
+  const list = tRaw >= T.more ? people.concat(extra) : people;
+  // the family's three gadgets in one column; on "more people" three more join in a second column
+  const spots = list.map((g, i) => ({ g, x: PANEL.x + (i < 3 ? 196 : 266), y: PCY - 38 + (i % 3) * 40 }));
+  let s = routerIcon(rx, ry, 0.55);
+  spots.forEach((sp, i) => {
+    s += gadget(sp.g[0], sp.x, sp.y);
+    if (sp.g[1]) s += `<text class="txt" x="${sp.x + 26}" y="${sp.y + 7}" font-size="19">${sp.g[1]}</text>`;
+    if (i === 1 && tRaw >= T.fault && tRaw < T.house) s += `<circle class="ink hair" cx="${sp.x}" cy="${sp.y}" r="${(18 + 2 * Math.sin(tRaw * 9)).toFixed(1)}"/>`;
+  });
+  if (tRaw >= T.share) {
+    const rate = 4;                                   // packets per second, shared out
+    for (let k = 0; k < 6; k++) {
+      const born = Math.floor((tRaw - T.share) * rate) - k;
+      if (born < 0) continue;
+      const q = (tRaw - T.share) * rate - born;
+      const age = (k + q) / rate / 0.7;
+      if (age > 1) continue;
+      const sp = spots[born % spots.length];
+      const x = rx + 20 + (sp.x - rx - 20) * age, y = ry - 18 + (sp.y - ry + 18) * age - Math.sin(age * Math.PI) * 16;
+      s += `<circle class="blue" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.5"/>`;
+    }
+  }
+  if (tRaw >= T.more) s += `<text class="txt" x="${rx}" y="${PANEL.y + 30}" font-size="21" text-anchor="middle" opacity="${seg(tRaw, T.more, T.more + 0.4).toFixed(2)}">more people,</text>
+    <text class="txt" x="${rx}" y="${PANEL.y + 52}" font-size="21" text-anchor="middle" opacity="${seg(tRaw, T.more + 0.6, T.more + 1).toFixed(2)}">less for each</text>`;
+  return s;
+}
+
+// Our house and the neighbors' house; the light goes through the wall, the password scrambles it.
+function neighbors(tRaw, t) {
+  const top = PANEL.y + 34, h = PANEL.h - 48, mid = PCX + 2;
+  let s = house(PANEL.x + 14, top, mid - PANEL.x - 22, h) + house(mid + 8, top, PANEL.x + PANEL.w - mid - 22, h);
+  const rx = PANEL.x + 60, ry = PCY + 34;
+  const scrambled = tRaw >= T.scramble;
+  s += `<clipPath id="ours"><rect x="${PANEL.x}" y="${PANEL.y}" width="${mid - PANEL.x}" height="${PANEL.h}"/></clipPath>
+    <clipPath id="theirs"><rect x="${mid}" y="${PANEL.y}" width="${PANEL.x + PANEL.w - mid}" height="${PANEL.h}"/></clipPath>
+    <g clip-path="url(#ours)">${rings(rx, ry - 14, tRaw, { max: 220, speed: 60, count: 5 })}</g>
+    <g clip-path="url(#theirs)" opacity="0.7">${rings(rx, ry - 14, tRaw, { max: 220, speed: 60, count: 5, dashed: scrambled })}</g>`;
+  s += routerIcon(rx, ry, 0.42) + gadget('tablet', PANEL.x + 112, ry - 4);
+  if (tRaw >= T.neighbors - 0.2) {
+    const nx = PANEL.x + PANEL.w - 54, ny = ry - 2;
+    s += `<g class="ink thin" opacity="${seg(tRaw, T.neighbors - 0.2, T.neighbors + 0.3).toFixed(2)}"><circle cx="${nx}" cy="${ny - 24}" r="8" fill="#ffffff"/><path d="M${nx} ${ny - 16} V${ny + 8} M${nx} ${ny - 10} L${nx - 12} ${ny - 2} M${nx} ${ny - 10} L${nx + 10} ${ny - 4} M${nx} ${ny + 8} L${nx - 7} ${ny + 22} M${nx} ${ny + 8} L${nx + 7} ${ny + 22}"/></g>`
+      + gadget('phone', nx + 16, ny - 6);
+    if (scrambled) {
+      const glyphs = ['#', '%', '&', '?', '@', '*'];
+      const g = k => glyphs[(Math.floor(t * 6) + k) % glyphs.length];
+      s += `<text class="txt" x="${nx + 2}" y="${ny - 44}" font-size="22" text-anchor="middle" fill="#2457d6">${g(0)}${g(2)}${g(4)}${g(1)}</text>`;
+    }
+  }
+  if (tRaw >= T.password) s += padlock(rx + 26, ry - 34, seg(tRaw, T.password, T.password + 0.4));
+  if (tRaw >= T.gadgets) s += `<path class="wave" d="M${PANEL.x + 104} ${ry - 26} l6 7 l12 -14" ${draw(seg(tRaw, T.gadgets, T.gadgets + 0.4))}/>`;
+  return s;
+}
+
+// Her recap: four small pictures, each drawn as she says it.
+function recap(tRaw, t) {
+  const cells = [[PANEL.x + 72, PANEL.y + 44], [PANEL.x + 218, PANEL.y + 44], [PANEL.x + 72, PANEL.y + 116], [PANEL.x + 218, PANEL.y + 116]];
+  let s = `<path class="ink hair" d="M${PCX} ${PANEL.y + 14} V${PANEL.y + PANEL.h - 14} M${PANEL.x + 14} ${PCY} H${PANEL.x + PANEL.w - 14}" opacity="0.5"/>`;
+  const p = i => seg(tRaw, T.recap[i] - 0.15, T.recap[i] + 0.45);
+  if (tRaw >= T.recap[0] - 0.15) {             // the box is a lamp
+    const [x, y] = cells[0];
+    s += `<g class="ink thin" opacity="${p(0).toFixed(2)}"><path d="M${x - 14} ${y + 4} L${x - 8} ${y - 14} H${x + 8} L${x + 14} ${y + 4} Z M${x} ${y + 4} V${y + 24} M${x - 10} ${y + 24} H${x + 10}" fill="#ffffff"/></g>
+      ${rings(x, y - 4, tRaw, { max: 40, speed: 30, count: 2, dashed: true })}`;
+  }
+  if (tRaw >= T.recap[1] - 0.15) {             // blinks really fast in a secret code
+    const [x, y] = cells[1];
+    const on = Math.floor(tRaw * 8) % 3 !== 1;
+    s += `<g opacity="${p(1).toFixed(2)}"><text class="txt" x="${x}" y="${y + 10}" font-size="24" text-anchor="middle" fill="#2457d6">${on ? '● ○ ● ●' : '○ ● ○ ●'}</text></g>`;
+  }
+  if (tRaw >= T.recap[2] - 0.15) {             // my tablet reads the blinks
+    const [x, y] = cells[2];
+    s += `<g opacity="${p(2).toFixed(2)}">${gadget('tablet', x, y)}<circle class="blue" cx="${x + 26}" cy="${y - 12}" r="3.5"/><circle class="blue" cx="${x + 36}" cy="${y - 18}" r="3.5"/></g>`;
+  }
+  if (tRaw >= T.recap[3] - 0.15) {             // and walls eat the light
+    const [x, y] = cells[3];
+    s += `<g opacity="${p(3).toFixed(2)}"><rect class="ink" x="${x - 6}" y="${y - 24}" width="12" height="48" fill="#ffffff"/>
+      <path class="wave" d="M${x - 40} ${y - 10} q6 10 0 20 M${x - 30} ${y - 14} q8 14 0 28" /><path class="wave" opacity="0.3" d="M${x + 18} ${y - 6} q4 6 0 12"/></g>`;
+  }
+  if (tRaw >= T.right) s += `<path class="wave" stroke-width="9" d="M${PCX - 46} ${PCY + 2} l30 32 l66 -74" ${draw(seg(tRaw, T.right + 0.2, T.right + 0.8))}/>`;
+  return s;
+}
+
+function oceanCable(tRaw, t) {
+  let waves = '';
+  for (let k = -6; k <= 5; k++) waves += `M${PCX + k * 24 + ((t * 18) % 24)} ${PANEL.y + 46} q6 -8 12 0 t12 0 `;
+  const fy = PCY + 10 + Math.sin(t * 3) * 4;
+  return `<path class="wave" stroke-width="3" d="${waves}"/>
+    <path class="ink" d="M${PANEL.x + 10} ${PANEL.y + PANEL.h - 30} H${PANEL.x + PANEL.w - 10}" stroke-width="8"/>
+    <g class="ink thin"><path d="M${PCX - 70} ${fy} q14 -10 28 0 q-14 10 -28 0 Z M${PCX - 42} ${fy} l10 -8 v16 Z" fill="#ffffff"/></g>
+    <text class="txt" x="${PCX + 60}" y="${PCY + 22}" font-size="54" text-anchor="middle">?</text>
+    ${tRaw >= T.next ? `<rect x="${PANEL.x + 40}" y="${PCY - 30}" width="${PANEL.w - 80}" height="58" rx="10" fill="#ffffff" stroke="none"/>
+      <text class="txt" x="${PCX}" y="${PCY + 12}" font-size="40" text-anchor="middle" opacity="${seg(tRaw, T.next, T.next + 0.4).toFixed(2)}">Next time!</text>` : ''}`;
+}
+
+// ---- the frame ----
+function scene(tRaw) {
+  const t = Math.floor(tRaw * 12) / 12;
+  const line = LINES.find(l => between(tRaw, l.a, l.b));
+  let out = `<path d="M40 ${GROUND + 2} H814" fill="none" stroke="#050505" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>`;
+  out += `<g class="ink"><path d="M340 372 H500 M356 372 L350 ${GROUND} M484 372 L490 ${GROUND}"/></g>` + routerIcon(420, 353, 1);
+
+  const p = Math.max(...T.shots.map(([a, b]) => seg(tRaw, a, a + 0.28) * (1 - seg(tRaw, b, b + 0.28))));
+  if (tRaw >= T.board && p < 0.05) {
+    out += `<rect class="ink" x="${PANEL.x}" y="${PANEL.y}" width="${PANEL.w}" height="${PANEL.h}" rx="14" fill="#ffffff" ${draw(seg(tRaw, T.board, T.board + 0.5))}/>`;
+    out += `<defs><clipPath id="board"><rect x="${PANEL.x + 3}" y="${PANEL.y + 3}" width="${PANEL.w - 6}" height="${PANEL.h - 6}" rx="12"/></clipPath></defs><g clip-path="url(#board)">`;
+    if (tRaw < T.house) out += sharing(tRaw, t);
+    else if (tRaw < T.turn) out += neighbors(tRaw, t);
+    else if (tRaw < L.k25.a) out += `<text class="txt" x="${PCX}" y="${PCY - 6}" font-size="38" text-anchor="middle">Your turn!</text>
+      <text class="txt" x="${PCX}" y="${PCY + 40}" font-size="24" text-anchor="middle" opacity="${seg(tRaw, T.turn + 1, T.turn + 1.4).toFixed(2)}">How does Wi-Fi work?</text>`;
+    else if (tRaw < T.cable) out += recap(tRaw, t);
+    else out += oceanCable(tRaw, t);
+    out += '</g>';
+  }
+
+  // Dad
+  const dadLine = line && line.who === 'dad';
+  const changes = [T.share, T.more, T.neighbors, T.password, T.scramble];
+  const pose = poseAt([
+    { from: L.k21.a + 0.4, to: L.k21.b, face: 'brows', tilt: 6 },
+    { from: L.k22.a, to: L.k22.b + 0.2, face: 'surprised' },
+    { from: L.d18.a - 0.3, to: L.d18.b + 0.6, face: 'grin', arm: 'shrug', left: 'shrug', tilt: -8 },
+    { from: L.k23.a, to: L.k23.b, face: 'smile', tilt: 6 },
+    { from: L.k24.a, to: L.k24.b, face: 'brows' },
+    { from: L.d20.a, to: L.d20.b + 0.5, face: 'wink', left: 'hip' },
+    { from: T.throat.a, to: T.throat.b, arm: 'chin', face: 'think' },
+    { from: L.d21.a, to: L.d21.b, arm: 'point', face: 'brows' },
+    { from: L.k25.a, to: L.k25.b, face: 'proud' },
+    { from: L.d22.a, to: wordTime(L.d22, 'actually') || L.d22.a + 0.6, face: 'surprised' },
+    { from: wordTime(L.d22, 'actually') || L.d22.a + 0.6, to: L.d22.b + 0.4, face: 'proud', arm: 'up' },
+    { from: L.k27.a, to: L.k27.b + 0.2, face: 'think', arm: 'chin' },
+    { from: L.d23.a, to: T.end, face: 'wink', arm: 'up' },
+    ...laughs('dad'),
+  ], tRaw);
+  const pointing = dadLine && changes.some(c => c != null && between(tRaw, c, c + 1.4));
+  const nods = T.recap.reduce((n, at) => n + nod(tRaw, at + 0.3, 0.5), 0);
+  out += dad(DAD_X, t, Object.assign({ arm: pointing ? 'point' : dadLine ? 'talk' : 'rest', mouth: mouthLevel('dad', tRaw), nod: nods }, pose));
+
+  // Daughter
+  let face = 'listen', look = 'left', arms = 'tablet';
+  if (p > 0.05) { face = 'viewer'; look = 'front'; }
+  else if (between(tRaw, L.k21.a - 0.1, L.k21.b + 0.2)) face = 'curious';
+  else if (between(tRaw, L.k22.a - 0.1, L.d18.b + 0.3)) face = 'flat';
+  else if (between(tRaw, L.k23.a - 0.1, L.k23.b + 0.2)) face = 'curious';
+  else if (between(tRaw, L.k24.a - 0.1, L.k24.b + 0.2)) face = 'wow';
+  else if (between(tRaw, L.d20.a, L.d20.b + 0.5)) face = 'flat';
+  else if (between(tRaw, L.k25.a - 0.1, L.k25.b + 0.2)) face = 'curious';
+  else if (between(tRaw, L.d22.a, L.d22.b + 0.3)) { face = 'wow'; arms = 'up'; }
+  else if (between(tRaw, L.k27.a - 0.1, L.k27.b + 0.3)) face = 'curious';
+  const kl = poseAt(laughs('kid'), tRaw);
+  out += kid(KID_X, t, { scale: 1, face: kl.face || face, look, mouth: mouthLevel('kid', tRaw), arms });
+
+  out += speech(line, DAD_X, KID_X, tRaw);
+  return closeUp(out, p, 'kid', KID_X, line);
+}
+</script>
+</body>
+</html>
