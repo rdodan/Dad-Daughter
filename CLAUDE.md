@@ -131,7 +131,8 @@ Things that went wrong and should not be repeated:
 
 ## Open items
 
-- The dad voice (Chris) is provisional until the owner confirms it.
+- The owner now makes the audio themselves (cold open sped up to 1.11×) and sends it as a file; use `import-audio.js` and `render.js --track`. The owner approved the cold open made this way. The ElevenLabs pipeline in `voices.js` is a fallback.
+- The owner is recording the remaining sections. Their animation does not exist yet: each section needs its lines added (in `lines.json` or a per-scene equivalent) and its scene drawn.
 - Only the first 30 seconds of the pilot are animated; the rest of the script has no animation or audio.
 - Whether to keep speech bubbles in wide shots now that there are voices.
 - The daughter character has no name; the dad calls her nothing specific in the script.
