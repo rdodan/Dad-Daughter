@@ -166,6 +166,7 @@ function kid(x, t, st) {
 }
 
 function bubble(lines, tipX, tipY, pop) {
+  if (window.NO_BUBBLES) return '';   // Shorts show big captions instead
   const size = 27, lh = 32;
   const w = Math.max(...lines.map(l => textWidth(l, size))) + 40;
   const h = lines.length * lh + 22;
@@ -196,7 +197,7 @@ function closeUp(out, p, who, x, line) {
   const z = 1 + (CLOSE_UP - 1) * p;
   const cx = 427 + (focus.x - 427) * p, cy = 240 + (focus.y - 240) * p, sx = 427 + (focus.sx - 427) * p;
   let shot = `<g style="--k:${Math.pow(z, -0.45).toFixed(3)}" transform="translate(${sx.toFixed(1)} 240) scale(${z.toFixed(3)}) translate(${(-cx).toFixed(1)} ${(-cy).toFixed(1)})">${out}</g>`;
-  if (line && line.viewer && line.who === who && p > 0.95) {
+  if (line && line.viewer && line.who === who && p > 0.95 && !window.NO_BUBBLES) {
     const capX = who === 'dad' ? 640 : 630, size = 36, lh = 44;
     const y0 = 240 - (line.show.length - 1) * lh / 2 + 12;
     shot += line.show.map((s, i) => `<text class="txt" x="${capX}" y="${y0 + i * lh}" font-size="${size}" text-anchor="middle">${s}</text>`).join('');
@@ -250,7 +251,8 @@ function installPlates(dir) {
   const old = document.getElementById('onpaper');
   // dir is a map of plate name -> data: URL. (A plate loaded from a file is refused as a
   // displacement map by the browser's security rules; embedded data is allowed.)
-  const img = (name, res) => `<feImage href="${dir[name]}" x="0" y="0" width="854" height="480" preserveAspectRatio="none" result="${res}"/>`;
+  const [pw, ph] = window.PAPER_SIZE || [854, 480], py = window.PAPER_TOP || 0;
+  const img = (name, res) => `<feImage href="${dir[name]}" x="0" y="${py}" width="${pw}" height="${ph}" preserveAspectRatio="none" result="${res}"/>`;
   let defs = '';
   for (let n = 0; n < 3; n++) {
     defs += `<filter id="onpaper${n}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
