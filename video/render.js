@@ -31,7 +31,7 @@ const { envelope, loudness, scale, FPS } = require('./envelope');
       l.a = t.a; l.b = t.b; l.tok = t.tok; l.lineTok = t.lineTok;
       l.env = scale(rms.slice(Math.floor(t.a * FPS), Math.ceil(t.b * FPS)));
     }
-    opts = { track: true, duration: info.duration };
+    opts = { track: true, duration: info.duration, events: info.events || [] };
   } else {
     for (const l of lines) {
       l.dur = parseFloat(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', audio(l.id)]).toString());

@@ -88,7 +88,7 @@ out.forEach((o, k) => {
 });
 out.forEach((o, k) => { if (k < out.length - 1) o.b = Math.min(o.b, out[k + 1].a); });
 
-fs.writeFileSync(path.join(dir, `${outName}.json`), JSON.stringify({ duration, lines: out }, null, 1));
+fs.writeFileSync(path.join(dir, `${outName}.json`), JSON.stringify({ duration, lines: out, events: events.map(e => ({ text: e.text, a: e.start, b: e.end })) }, null, 1));
 console.log('heard:', stt.text);
 out.forEach(o => console.log(o.id.padEnd(3), o.a.toFixed(2), '->', o.b.toFixed(2), '|', lines.find(l => l.id === o.id).show.join(' ')));
 const missed = script.filter((s, k) => at[k] < 0 || !same(s.tok, heard[at[k]]));

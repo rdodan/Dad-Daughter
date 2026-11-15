@@ -15,6 +15,9 @@ function textWidth(s, size) {
 }
 const draw = p => `pathLength="1" stroke-dasharray="1" stroke-dashoffset="${(1 - clamp(p, 0, 1)).toFixed(3)}"`;
 
+// The dad. st.face: smile (default), grin, laugh, proud, brows, think, surprised, wink.
+// st.arm (right arm): rest, talk, point, up, chin.  st.left (left arm): rest, shrug, hip.
+// st.tilt: head tilt in degrees.  st.nod: 0..1 head dip.  st.mouth: loudness of his voice now.
 function dad(x, t, st) {
   const s = 1.45;
   let bob = 0, legs = 'M0 100 L-18 165 M0 100 L18 165';
@@ -29,26 +32,92 @@ function dad(x, t, st) {
     talk: flap ? 'M0 42 L26 60 L40 38' : 'M0 42 L27 58 L45 44',
     point: 'M0 42 L46 58',
     up: flap ? 'M0 42 L26 38 L38 6' : 'M0 42 L27 38 L42 9',
-  }[st.arm];
+    chin: 'M0 42 L24 46 L12 30',
+    shrug: 'M0 42 L22 50 L34 30',
+  }[st.arm || 'rest'];
+  const left = {
+    rest: 'M0 42 L-22 80',
+    shrug: 'M0 42 L-22 50 L-34 30',
+    hip: 'M0 42 L-20 58 L-6 70',
+  }[st.left || 'rest'];
+  const face = st.face || 'smile';
   const m = st.mouth || 0;
-  const mouth = m > 0.12
-    ? `<ellipse class="dot" cx="3" cy="11" rx="${(4 + 2 * m).toFixed(2)}" ry="${(1.5 + 5 * m).toFixed(2)}"/>`
-    : '<path class="thin" d="M-5 10 Q3 16 11 10"/>';
+  const talking = m > 0.12;
+  let eyes = '<circle class="dot" cx="-5" cy="-1" r="2.2"/><circle class="dot" cx="11" cy="-1" r="2.2"/>';
+  let brows = '', mouth, extra = '';
+  if (face === 'laugh' || face === 'proud') eyes = '<path class="thin" d="M-9 0 Q-5 -5 -1 0 M7 0 Q11 -5 15 0"/>';
+  if (face === 'wink') eyes = '<path class="thin" d="M-9 -1 H-1"/><circle class="dot" cx="11" cy="-1" r="2.2"/>';
+  if (face === 'surprised') eyes = '<circle class="dot" cx="-5" cy="-1" r="3"/><circle class="dot" cx="11" cy="-1" r="3"/>';
+  if (face === 'think') eyes = '<circle class="dot" cx="-3" cy="-4" r="2.2"/><circle class="dot" cx="13" cy="-4" r="2.2"/>';
+  if (face === 'brows' || face === 'surprised') brows = 'M-10 -10 Q-5 -14 0 -11 M6 -11 Q11 -14 16 -10';
+  if (face === 'think') brows = 'M-10 -8 L0 -10 M6 -12 L16 -9';
+  if (face === 'wink') brows = 'M6 -11 Q11 -14 16 -10';
+  if (face === 'laugh') {
+    mouth = `<path class="dot" d="M-7 7 Q3 ${22 + 4 * m} 13 7 Z"/>`;
+    extra = '<path class="hair" d="M-26 -14 L-32 -20 M-28 -4 H-36 M30 -14 L36 -20 M32 -4 H40"/>';
+  } else if (talking) {
+    mouth = `<ellipse class="dot" cx="3" cy="11" rx="${(4 + 2 * m).toFixed(2)}" ry="${(1.5 + 5 * m).toFixed(2)}"/>`;
+  } else if (face === 'grin' || face === 'proud' || face === 'wink') {
+    mouth = '<path class="dot" d="M-6 8 Q3 20 12 8 Z"/>';
+  } else if (face === 'surprised') {
+    mouth = '<circle class="thin" cx="3" cy="12" r="3.5"/>';
+  } else if (face === 'think') {
+    mouth = '<path class="thin" d="M-3 12 Q2 9 8 12"/>';
+  } else {
+    mouth = '<path class="thin" d="M-5 10 Q3 16 11 10"/>';
+  }
+  const tilt = (st.tilt || 0) + (st.nod ? 0 : 0);
+  const dip = (st.nod || 0) * 5;
   return `<g class="ink" transform="translate(${x.toFixed(1)} ${GROUND - 165 * s + bob}) scale(${s})">
-    <path d="M0 22 V100 M0 42 L-22 80 ${arm} ${legs}"/>
+    <path d="M0 22 V100 ${left} ${arm} ${legs}"/>
     <polygon class="blue" points="0,25 -7,35 0,66 7,35"/>
-    <circle r="22" fill="#ffffff"/>
-    <path class="dot" d="M-22 -5 Q-21 -27 0 -25 Q21 -27 22 -5 Q0 -17 -22 -5 Z"/>
-    <circle class="dot" cx="-5" cy="-1" r="2.2"/><circle class="dot" cx="11" cy="-1" r="2.2"/>
-    ${mouth}
+    <g transform="translate(0 ${dip.toFixed(1)}) rotate(${tilt.toFixed(1)} 0 20)">
+      <circle r="22" fill="#ffffff"/>
+      <path class="dot" d="M-22 -5 Q-21 -27 0 -25 Q21 -27 22 -5 Q0 -17 -22 -5 Z"/>
+      ${eyes}${brows ? `<path class="thin" d="${brows}"/>` : ''}
+      ${mouth}${extra}
+    </g>
   </g>`;
+}
+
+// Blue rings leaving a point in every direction. `blink` flickers them like a very fast code.
+function rings(x, y, t, opts = {}) {
+  const { max = 120, speed = 60, count = 4, blink = false, dashed = false } = opts;
+  let out = '';
+  for (let k = 0; k < count; k++) {
+    const r = 10 + ((t * speed + k * (max / count)) % max);
+    let o = clamp(1.1 - r / max, 0, 1);
+    if (blink && Math.floor(t * 24 + k * 2) % 3 === 0) o = 0;
+    out += `<circle class="wave" cx="${x}" cy="${y}" r="${r.toFixed(1)}" opacity="${o.toFixed(2)}" ${dashed ? 'stroke-dasharray="6 9"' : ''}/>`;
+  }
+  return out;
+}
+
+// When something happens to a character: a list of { from, to, ...pose } windows, latest wins.
+function poseAt(windows, tRaw) {
+  const out = {};
+  windows.filter(w => w.from != null && tRaw >= w.from && tRaw < w.to).forEach(w => Object.assign(out, w));
+  delete out.from; delete out.to;
+  return out;
+}
+
+// A nod: the head dips and comes back once over `len` seconds.
+const nod = (tRaw, at, len = 0.5) => (tRaw >= at && tRaw < at + len) ? Math.sin((tRaw - at) / len * Math.PI) : 0;
+
+// Laughs heard in the recording (stored by import-audio.js), as { from, to } windows.
+// A laugh inside one of her lines is hers; any other laugh is his.
+let EVENTS = [];
+function laughs(who) {
+  const inKid = e => LINES.some(l => l.who === 'kid' && e.a > l.a + 0.2 && e.b < l.b);
+  return EVENTS.filter(e => /laugh|chuckl|giggl/i.test(e.text) && (who === 'kid') === inKid(e))
+    .map(e => ({ from: e.a, to: e.b + 0.15, face: 'laugh' }));
 }
 
 function kid(x, t, st) {
   const s = 1.45 * st.scale;
   const ox = st.look === 'left' ? -3 : 0;
   const m = st.mouth || 0, open = m > 0.12;
-  let brows = '', mouth = '', extra = '', eyeR = 2;
+  let brows = '', mouth = '', extra = '', eyeR = 2, eyesSvg = '';
   if (st.face === 'lost') {
     brows = `M${-13 + ox} -10 L${-5 + ox} -7 M${5 + ox} -7 L${13 + ox} -10`;
     mouth = open ? `<ellipse class="dot" cx="${ox}" cy="9" rx="${(3.5 + 2 * m).toFixed(2)}" ry="${(1.5 + 5 * m).toFixed(2)}"/>` : `<path class="thin" d="M${-7 + ox} 9 Q${-4.5 + ox} 5 ${-2 + ox} 9 T${3 + ox} 9 T${8 + ox} 9"/>`;
@@ -64,6 +133,9 @@ function kid(x, t, st) {
   } else if (st.face === 'flat') {
     brows = 'M-11 -5 H-3 M3 -5 H11';
     mouth = open ? `<ellipse class="dot" cx="0" cy="9" rx="${(3 + m).toFixed(2)}" ry="${(1 + 3 * m).toFixed(2)}"/>` : '<path class="thin" d="M-5 10 L6 8"/>';
+  } else if (st.face === 'laugh') {
+    eyesSvg = `<path class="thin" d="M${-10 + ox} -2 Q${-6 + ox} -7 ${-2 + ox} -2 M${2 + ox} -2 Q${6 + ox} -7 ${10 + ox} -2"/>`;
+    mouth = `<path class="dot" d="M${-7 + ox} 6 Q${ox} ${19 + 3 * m} ${7 + ox} 6 Z"/>`;
   } else if (st.face === 'wow') {
     brows = `M${-12 + ox} -12 L${-4 + ox} -14 M${4 + ox} -14 L${12 + ox} -12`;
     eyeR = 2.8;
@@ -87,7 +159,7 @@ function kid(x, t, st) {
     ${tablet}
     <circle r="19" fill="#ffffff"/>
     <polygon class="orange" points="0,-19 -13,-29 -13,-12"/><polygon class="orange" points="0,-19 13,-29 13,-12"/>
-    <circle class="dot" cx="${-6 + ox}" cy="-2" r="${eyeR}"/><circle class="dot" cx="${6 + ox}" cy="-2" r="${eyeR}"/>
+    ${eyesSvg || `<circle class="dot" cx="${-6 + ox}" cy="-2" r="${eyeR}"/><circle class="dot" cx="${6 + ox}" cy="-2" r="${eyeR}"/>`}
     ${brows ? `<path class="thin" d="${brows}"/>` : ''}
     ${mouth}${extra}
   </g>`;

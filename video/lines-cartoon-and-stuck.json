@@ -1,0 +1,13 @@
+[
+  { "id": "k15", "who": "kid", "viewer": true, "show": ["But wait. Where does", "the box get the", "cartoon from? Is it", "inside the box?"] },
+  { "id": "d12", "who": "dad", "show": ["Nope. See this cable in the back?", "It goes into the wall, under the street,", "sometimes under the whole ocean,", "to a giant computer far away.", "That's where the cartoon lives."] },
+  { "id": "k16", "who": "kid", "show": ["So when I", "press play..."] },
+  { "id": "d13", "who": "dad", "show": ["Your tablet blinks a message to", "the router: \"One cartoon, please.\"", "The router passes it down the cable.", "The big computer sends the cartoon", "back, chopped into tiny pieces.", "And the router blinks those pieces", "over to you."] },
+  { "id": "k17", "who": "kid", "show": ["All that when I", "press one button?"] },
+  { "id": "d14", "who": "dad", "show": ["In less time than it", "takes you to blink."] },
+  { "id": "k18", "who": "kid", "show": ["Then why did it get", "stuck in my room?"] },
+  { "id": "d15", "who": "dad", "show": ["What happens to a lamp's light", "when you close the door?"] },
+  { "id": "k19", "who": "kid", "show": ["It gets dark."] },
+  { "id": "d16", "who": "dad", "show": ["Same thing. Walls soak up", "some of the invisible light.", "More walls, weaker light.", "Your tablet missed some blinks,", "so it had to ask again.", "That's the spinning circle."] },
+  { "id": "k20", "who": "kid", "viewer": true, "show": ["So THAT'S why it", "works better near", "the box. Did you", "know that?"] }
+]

@@ -44,7 +44,7 @@ let LINES = [], L = {}, T = {};
 // With a recording made elsewhere (opts.track), every line already has its start and end in
 // that recording; the animation keeps those times and fits the actions around them.
 window.setup = function (lines, opts = {}) {
-  LINES = lines; L = {}; T = {};
+  LINES = lines; L = {}; T = {}; EVENTS = opts.events || [];
   lines.forEach(l => { L[l.id] = l; });
   if (opts.track) return fitToTrack(opts.duration);
   let t = 0.5;
@@ -141,7 +141,15 @@ function scene(tRaw) {
     dadX = -90 + 260 * clamp((t - T.walkA) / 1.4, 0, 1);
     const speaking = !!line && line.who === 'dad';
     const arm = t >= L.d3.a ? 'up' : between(t, T.pointA, T.pointB) ? 'point' : speaking ? 'talk' : 'rest';
-    out += dad(dadX, t, { walk: t < T.walkB, arm, mouth: mouthLevel('dad', tRaw) });
+    const pose = t < T.walkB ? {} : poseAt([
+      { from: L.d1.a, to: L.d1.a + 1.0, arm: 'shrug', left: 'shrug', face: 'grin' },
+      { from: L.k3.a, to: L.k3.b + 0.3, face: 'surprised', tilt: 6 },
+      { from: L.k6.a, to: L.k6.b + 0.2, face: 'think', arm: 'chin' },
+      { from: L.d3.a, to: L.d3.b, face: 'grin' },
+      { from: L.k7.a, to: T.end, face: 'proud' },
+      ...laughs('dad'),
+    ], tRaw);
+    out += dad(dadX, t, Object.assign({ walk: t < T.walkB, arm, mouth: mouthLevel('dad', tRaw) }, pose));
   }
 
   // Daughter

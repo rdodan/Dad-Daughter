@@ -66,6 +66,7 @@ AI-made animated explainer channels are multiplying fast (searches for "animated
 | `video/invisible-light.html`, `video/lines-invisible-light.json` | Scene 2, "Invisible light": a drawing board between the two shows the ghost, lamp, router = lamp, crossed-out eye, radio waves and car, the flashlight blinking on each spoken "on"/"off", a blink counter, the tablet's tiny receiver, and the cartoon turning into blue dots. |
 | `video/audio/<scene>.flac`, `<scene>.json` | The owner's recording for a scene, and each line's start, end and per-word times in it. |
 | `video/invisible-light-480p.mp4` | Scene 2 rendered, about 61 seconds. |
+| `video/cartoon-and-stuck.html`, `video/lines-cartoon-and-stuck.json`, `video/cartoon-and-stuck-480p.mp4` | Scenes 3 and 4 ("Where the cartoon lives" and "Why it gets stuck"), one recording, about 65 seconds: the cable's journey scrolling past wall, street, ocean and giant computer as each is named; the round trip of the request and the cartoon pieces; an eye that blinks on "blink"; a floor plan where the rings weaken at each wall; a lamp whose light is cut off when the door shuts. |
 | `video/render.js` | Renders every frame in headless Chromium, mixes the audio, encodes the MP4. `--track <file>` uses one outside recording instead of the per-line clips. |
 | `video/import-audio.js` | Brings in a recording made elsewhere and finds each line's timing in it. |
 | `video/cold-open-480p.mp4` | Current result: about 26 seconds, 854×480, 24 fps, with voices. |
@@ -131,14 +132,14 @@ Things that went wrong and should not be repeated:
 
 - Prefers to try things and react: "let's give it a go and see how it goes". Show a result, then adjust.
 - Gives short visual feedback ("add a bit more black"). Apply it across every drawing, not only the one mentioned.
+- Wants the dad expressive "here and there", not only the daughter. `dad()` in `common.js` takes `face` (smile, grin, laugh, proud, brows, think, surprised, wink), `arm` (rest, talk, point, up, chin, shrug), `left` (rest, shrug, hip), `tilt` and `nod`. Each scene sets them at particular words with `poseAt([...windows])`. Laughs found in the recording (`laughs('dad')`, `laughs('kid')`) switch on the laughing face automatically; a laugh inside one of her lines is hers. Give him a reaction on most of her lines and on key words of his own.
 - Wants to see things as drawings and video, not descriptions.
 
 ## Open items
 
 - The owner now makes the audio themselves (cold open sped up to 1.11×) and sends it as a file; use `import-audio.js` and `render.js --track`. The owner approved the cold open made this way. The ElevenLabs pipeline in `voices.js` is a fallback.
-- Sections done: cold open, invisible light. Still to come from the owner: "Where the cartoon lives", "Why it gets stuck", "Two quick ones", "She explains it back". For each: write `lines-<scene>.json` from `scripts/wifi-pilot.md`, import the recording, build `<scene>.html` on `common.js` (copy the head of an existing scene), check stills, render.
+- Sections done: cold open, invisible light, where the cartoon lives + why it gets stuck. Still to come from the owner: "Two quick ones", "She explains it back". For each: write `lines-<scene>.json` from `scripts/wifi-pilot.md`, import the recording, build `<scene>.html` on `common.js` (copy the head of an existing scene), check stills, render.
 - Rendered sections are separate MP4s; joining them into one episode is not done yet.
 - Keep her bubble lines short (two short lines): long kid bubbles overlap the drawing board.
-- Only the first 30 seconds of the pilot are animated; the rest of the script has no animation or audio.
 - Whether to keep speech bubbles in wide shots now that there are voices.
 - The daughter character has no name; the dad calls her nothing specific in the script.

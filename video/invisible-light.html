@@ -45,7 +45,7 @@ const PANEL = { x: 285, y: 126, w: 290, h: 160 };   // the drawing board between
 const PCX = PANEL.x + PANEL.w / 2, PCY = PANEL.y + PANEL.h / 2;
 
 window.setup = function (lines, opts = {}) {
-  LINES = lines; L = {}; T = {};
+  LINES = lines; L = {}; T = {}; EVENTS = opts.events || [];
   lines.forEach(l => { L[l.id] = l; });
   const w = (id, word, nth, fallback) => { const x = wordTime(L[id], word, nth); return x == null ? fallback : x; };
   T.panel = L.k8.a;                                         // the board appears with "Like a ghost?"
@@ -104,19 +104,6 @@ function router(x, y, p, scale = 1) {
     <path d="M-29 -15 L-37 -47 M29 -15 L37 -47" ${draw(p)}/>
     ${p >= 1 ? '<circle class="dot" cx="-27" cy="0" r="3"/><circle class="blue" cx="-13" cy="0" r="4"/><circle class="dot" cx="1" cy="0" r="3"/>' : ''}
   </g>`;
-}
-
-// Blue rings leaving a point in every direction. `blink` flickers them like a very fast code.
-function rings(x, y, t, opts = {}) {
-  const { max = 120, speed = 60, count = 4, blink = false, dashed = false } = opts;
-  let out = '';
-  for (let k = 0; k < count; k++) {
-    const r = 10 + ((t * speed + k * (max / count)) % max);
-    let o = clamp(1.1 - r / max, 0, 1);
-    if (blink && Math.floor(t * 24 + k * 2) % 3 === 0) o = 0;
-    out += `<circle class="wave" cx="${x}" cy="${y}" r="${r.toFixed(1)}" opacity="${o.toFixed(2)}" ${dashed ? 'stroke-dasharray="6 9"' : ''}/>`;
-  }
-  return out;
 }
 
 function crossedEye(x, y, p) {
@@ -257,7 +244,22 @@ function scene(tRaw) {
   const changes = [T.lamp, T.routerIsLamp, T.cantSee, T.car, T.flash, T.fast, T.tablet, T.tiny, T.picture, T.dots];
   const dadLine = line && line.who === 'dad';
   const pointing = dadLine && changes.some(c => between(tRaw, c, c + 1.6));
-  out += dad(DAD_X, t, { arm: pointing ? 'point' : dadLine ? 'talk' : 'rest', mouth: mouthLevel('dad', tRaw) });
+  const wt = (id, word, n = 0) => wordTime(L[id], word, n);
+  const pose = poseAt([
+    { from: L.k8.a, to: L.k8.b + 0.3, face: 'grin', tilt: 8 },
+    { from: L.k9.a - 0.2, to: L.k9.b + 0.3, face: 'proud' },
+    { from: L.k10.a, to: L.k10.b + 0.3, face: 'brows', left: 'hip' },
+    { from: L.d7.a, to: wt('d7', 'called') || L.d7.a + 0.8, face: 'brows', left: 'hip' },
+    { from: L.k12.a, to: L.k12.b + 0.3, face: 'wink' },
+    { from: L.d9.a, to: (wt('d9', 'router') || L.d9.a + 0.8), face: 'proud' },
+    { from: wt('d9', 'millions'), to: wt('d9', 'millions') + 1.2, face: 'brows', arm: 'up' },
+    { from: L.k13.a, to: L.k13.b + 0.3, face: 'grin', tilt: -7 },
+    { from: L.k14.a, to: L.k14.b, face: 'think', arm: 'chin' },
+    { from: wt('d11', 'lot'), to: wt('d11', 'lot') + 1, face: 'brows', arm: 'up' },
+    ...laughs('dad'),
+  ], tRaw);
+  const nodNow = nod(tRaw, L.d7.a, 0.5) + nod(tRaw, L.d9.a, 0.5);
+  out += dad(DAD_X, t, Object.assign({ arm: pointing ? 'point' : dadLine ? 'talk' : 'rest', mouth: mouthLevel('dad', tRaw), nod: nodNow }, pose));
 
   // Daughter
   let face = 'listen', look = 'left', arms = 'tablet';
@@ -267,7 +269,7 @@ function scene(tRaw) {
   else if (between(tRaw, L.k12.a - 0.1, L.k12.b + 0.3)) face = 'wow';
   else if (between(tRaw, L.k13.a - 0.1, L.k13.b + 0.4)) { face = 'wow'; arms = 'up'; }
   else if (between(tRaw, L.k14.a - 0.1, L.k14.b + 0.3)) face = 'curious';
-  out += kid(KID_X, t, { scale: 1, face, look, mouth: mouthLevel('kid', tRaw), arms });
+  out += kid(KID_X, t, { scale: 1, face: poseAt(laughs('kid'), tRaw).face || face, look, mouth: mouthLevel('kid', tRaw), arms });
 
   out += speech(line, DAD_X, KID_X, tRaw);
 

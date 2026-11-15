@@ -1,0 +1,329 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Wi-Fi pilot: where the cartoon lives, why it gets stuck</title>
+<style>
+  html, body { margin: 0; background: #fff; }
+  #stage { display: block; width: 854px; height: 480px; background: #fff; filter: url(#onpaper); }
+  .ink { fill: none; stroke: #050505; stroke-width: calc(5px * var(--k, 1)); stroke-linecap: round; stroke-linejoin: round; }
+  .thin { stroke-width: calc(3.2px * var(--k, 1)); }
+  .hair { stroke-width: calc(2.2px * var(--k, 1)); }
+  .dot { fill: #050505; stroke: none; }
+  .blue { fill: #2457d6; stroke: none; }
+  .orange { fill: #ee8420; stroke: none; }
+  .wave { fill: none; stroke: #2457d6; stroke-width: calc(5px * var(--k, 1)); stroke-linecap: round; }
+  .txt { font-family: "Patrick Hand", "Comic Sans MS", cursive; fill: #050505; stroke: none; }
+</style>
+</head>
+<body>
+<!-- The paper: creases stay still, the ink grain changes every few frames so the lines feel hand-drawn. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="onpaper" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feTurbulence type="turbulence" baseFrequency="0.006 0.008" numOctaves="5" seed="17" result="crease"/>
+    <feTurbulence id="grainNoise" type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="24" result="grainRaw"/>
+    <feColorMatrix in="grainRaw" type="matrix" values="2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  0 0 0 0 1" result="grain"/>
+    <feDisplacementMap in="SourceGraphic" in2="crease" scale="10" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+    <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
+    <feFlood flood-color="#ffffff" result="white"/>
+    <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
+    <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.2" k2="1" k3="0.2" k4="0" result="inked"/>
+    <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
+    <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
+    <feBlend in="light" in2="inked" mode="hard-light"/>
+  </filter>
+</defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><text id="measure" class="txt" font-size="27"></text></svg>
+<svg id="stage" viewBox="0 0 854 480"></svg>
+<script src="common.js"></script>
+<script>
+// Scenes 3 and 4, "Where the cartoon lives" and "Why it gets stuck", as one recording.
+// Every action is placed at a line's start or at a spoken word (wordTime).
+let LINES = [], L = {}, T = {};
+const DAD_X = 170, KID_X = 690;
+const PANEL = { x: 285, y: 126, w: 290, h: 160 };
+const PCX = PANEL.x + PANEL.w / 2, PCY = PANEL.y + PANEL.h / 2;
+
+window.setup = function (lines, opts = {}) {
+  LINES = lines; L = {}; T = {}; EVENTS = opts.events || [];
+  lines.forEach(l => { L[l.id] = l; });
+  const w = (id, word, nth = 0, f = null) => { const x = wordTime(L[id], word, nth); return x == null ? f : x; };
+  // where the cartoon lives: the cable's journey, one stop per spoken word
+  T.board = L.d12.a;
+  T.cable = w('d12', 'cable', 0, L.d12.a + 1.4);
+  T.stops = [['wall', w('d12', 'wall')], ['street', w('d12', 'street')], ['ocean', w('d12', 'ocean')], ['computer', w('d12', 'computer')]];
+  T.lives = w('d12', 'cartoon', 0, L.d12.b - 0.6);
+  T.nope = w('d12', 'nope', 0, L.d12.a);
+  T.play = L.k16.a;
+  T.playPress = w('k16', 'play', 0, L.k16.b - 0.4);
+  // the round trip
+  T.trip = L.d13.a;
+  T.message = w('d13', 'message', 0, L.d13.a + 1);
+  T.please = [w('d13', 'one', 0, L.d13.a + 2), w('d13', 'please', 0, L.d13.a + 3.4)];
+  T.passes = w('d13', 'passes', 0, L.d13.a + 5);
+  T.sends = w('d13', 'sends', 0, L.d13.a + 8);
+  T.pieces = w('d13', 'chopped', 0, L.d13.a + 9.5);
+  T.blinksBack = w('d13', 'blinks', 1, L.d13.a + 12.4);
+  T.tripEnd = L.d13.b;
+  // faster than a blink
+  T.eye = L.k17.a;
+  T.blink = w('d14', 'blink', 0, L.d14.b - 0.4);
+  // why it gets stuck
+  T.plan = L.k18.a;
+  T.lamp = L.d15.a;
+  T.close = w('d15', 'close', 0, L.d15.b - 0.8);
+  T.walls = w('d16', 'walls', 0, L.d16.a + 1.2);
+  T.moreWalls = w('d16', 'walls', 1, L.d16.a + 4.3);
+  T.missed = w('d16', 'missed', 0, L.d16.a + 7);
+  T.ask = w('d16', 'ask', 0, L.d16.a + 8.9);
+  T.spin = w('d16', 'spinning', 0, L.d16.b - 0.8);
+  // the camera: close-ups on her two lines to the viewer
+  T.shots = [[-1, Math.min(L.k15.b + 0.1, L.d12.a - 0.3)], [Math.max(L.d16.b, L.k20.a - 0.3), 1e9]];
+  T.end = Math.max(opts.duration || 0, L.k20.b) + 0.8;
+  window.TIMELINE = { lines: LINES.map(l => ({ id: l.id, a: l.a, b: l.b })), end: T.end };
+  window.TOTAL_FRAMES = Math.ceil(T.end * FPS);
+  window.renderFrame(0);
+};
+
+// ---- drawings ----
+
+function routerIcon(x, y, s = 0.6) {
+  return `<g class="ink" transform="translate(${x} ${y}) scale(${s})">
+    <rect x="-45" y="-15" width="90" height="30" rx="6" fill="#ffffff"/><path d="M-29 -15 L-37 -47 M29 -15 L37 -47"/>
+    <circle class="dot" cx="-27" cy="0" r="3"/><circle class="blue" cx="-13" cy="0" r="4"/><circle class="dot" cx="1" cy="0" r="3"/></g>`;
+}
+function tabletIcon(x, y, s = 1, screen = '') {
+  return `<g class="ink thin" transform="translate(${x} ${y}) scale(${s})"><rect x="-22" y="-16" width="44" height="32" rx="4" fill="#ffffff"/></g>${screen}`;
+}
+function computerIcon(x, y, p, t) {
+  const lights = [0, 1, 2, 3, 4].map(k => `<circle class="${Math.floor(t * 6 + k * 2) % 3 ? 'dot' : 'blue'}" cx="${x + 18}" cy="${y - 44 + k * 18}" r="3"/>`).join('');
+  return `<g class="ink">
+    <rect x="${x - 30}" y="${y - 56}" width="60" height="100" rx="5" fill="#ffffff" ${draw(p)}/>
+    <path class="thin" d="M${x - 22} ${y - 38} H${x + 8} M${x - 22} ${y - 20} H${x + 8} M${x - 22} ${y - 2} H${x + 8} M${x - 22} ${y + 16} H${x + 8}" ${draw(seg(p, 0.5, 1))}/>
+  </g>${p >= 1 ? lights : ''}`;
+}
+function sunIcon(x, y, s = 1) {
+  let r = '';
+  for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; r += `M${(Math.cos(a) * 15).toFixed(1)} ${(Math.sin(a) * 15).toFixed(1)} L${(Math.cos(a) * 21).toFixed(1)} ${(Math.sin(a) * 21).toFixed(1)} `; }
+  return `<g class="ink hair" transform="translate(${x} ${y}) scale(${s})"><circle r="10" fill="#ffffff"/><path d="${r}"/>
+    <circle class="dot" cx="-3.5" cy="-2" r="1.5"/><circle class="dot" cx="3.5" cy="-2" r="1.5"/><path d="M-4 3 Q0 7 4 3"/></g>`;
+}
+
+// The cable's journey: a long strip that scrolls inside the board as he names each stop.
+const STRIP = { router: 70, wall: 210, street: 360, ocean: 520, computer: 690 };
+function journey(tRaw, t) {
+  const stops = [['router', T.cable]].concat(T.stops);
+  let viewX = STRIP.router, reach = STRIP.router;
+  stops.forEach(([name, at], i) => {
+    if (at == null || i === 0) return;
+    const from = STRIP[stops[i - 1][0]], to = STRIP[name];
+    const q = seg(tRaw, at - 0.25, at + 0.35);
+    if (tRaw >= at - 0.25) { viewX = from + (to - from) * q; reach = from + (to - from) * q; }
+  });
+  if (tRaw < T.cable) reach = STRIP.router - 10;
+  const ox = PCX - viewX, base = PCY + 44;
+  let s = `<g transform="translate(${ox.toFixed(1)} 0)">`;
+  s += routerIcon(STRIP.router, base - 32, 0.7);
+  if (tRaw >= T.cable) {
+    // the cable runs from the back of the router along the ground, dipping under the street and the sea
+    s += `<path class="ink" d="M${STRIP.router + 30} ${base - 30} C${STRIP.router + 60} ${base - 30} ${STRIP.router + 50} ${base} ${STRIP.router + 80} ${base}
+      H${STRIP.street - 70} Q${STRIP.street - 60} ${base + 18} ${STRIP.street - 40} ${base + 18} H${STRIP.street + 40} Q${STRIP.street + 60} ${base + 18} ${STRIP.street + 70} ${base}
+      H${STRIP.ocean - 70} Q${STRIP.ocean - 55} ${base + 22} ${STRIP.ocean - 30} ${base + 22} H${STRIP.ocean + 40} Q${STRIP.ocean + 60} ${base + 22} ${STRIP.ocean + 70} ${base} H${STRIP.computer - 30}"
+      ${draw(clamp((reach - STRIP.router) / (STRIP.computer - STRIP.router), 0, 1))}/>`;
+  }
+  const label = (x, txt) => `<text class="txt" x="${x}" y="${PANEL.y + 30}" font-size="24" text-anchor="middle">${txt}</text>`;
+  const at = name => (T.stops.find(st => st[0] === name) || [])[1];
+  if (tRaw >= at('wall') - 0.25) {
+    let bricks = '';
+    for (let r = 0; r < 6; r++) bricks += `M${STRIP.wall - 16} ${base - 84 + r * 16} H${STRIP.wall + 16} M${STRIP.wall + (r % 2 ? -4 : 6)} ${base - 100 + r * 16} V${base - 84 + r * 16} `;
+    s += `<g class="ink"><rect x="${STRIP.wall - 16}" y="${base - 100}" width="32" height="104" fill="#ffffff"/><path class="hair" d="${bricks}"/></g>` + label(STRIP.wall, 'wall');
+  }
+  if (tRaw >= at('street') - 0.25) {
+    s += `<g class="ink"><path d="M${STRIP.street - 62} ${base} H${STRIP.street + 62}"/><path class="thin" stroke-dasharray="10 10" d="M${STRIP.street - 56} ${base - 10} H${STRIP.street + 56}"/>
+      <path class="thin" d="M${STRIP.street + 40} ${base} V${base - 64} H${STRIP.street + 24}"/></g>`;
+    const carX = STRIP.street - 70 + ((t * 70) % 140);
+    s += `<g class="ink thin"><path d="M${carX - 16} ${base - 6} V${base - 14} L${carX - 8} ${base - 22} H${carX + 8} L${carX + 14} ${base - 14} H${carX + 18} V${base - 6} Z" fill="#ffffff"/></g>` + label(STRIP.street, 'street');
+  }
+  if (tRaw >= at('ocean') - 0.25) {
+    let waves = '';
+    for (let k = -3; k <= 2; k++) waves += `M${STRIP.ocean + k * 22 + ((t * 20) % 22)} ${base - 40} q5.5 -7 11 0 t11 0 `;
+    const fy = base - 14 + Math.sin(t * 3) * 3;
+    s += `<g class="wave"><path d="${waves}" stroke-width="3"/></g>
+      <g class="ink thin"><path d="M${STRIP.ocean - 18} ${fy} q10 -8 20 0 q-10 8 -20 0 Z M${STRIP.ocean + 2} ${fy} l8 -6 v12 Z" fill="#ffffff"/></g>` + label(STRIP.ocean, 'ocean');
+  }
+  if (tRaw >= at('computer') - 0.25) {
+    s += computerIcon(STRIP.computer, base - 8, seg(tRaw, at('computer') - 0.2, at('computer') + 0.5), t) + label(STRIP.computer, 'giant computer');
+    if (tRaw >= T.lives) s += sunIcon(STRIP.computer - 56, base - 70, seg(tRaw, T.lives, T.lives + 0.3) * 1.1);
+  }
+  return s + '</g>';
+}
+
+// The round trip, all on one board: tablet, router, cable, computer.
+function roundTrip(tRaw, t) {
+  const tab = { x: PANEL.x + 42, y: PCY + 26 }, rt = { x: PANEL.x + 112, y: PCY + 34 }, pc = { x: PANEL.x + 238, y: PCY + 20 };
+  const cableY = PCY + 50;
+  let s = `<path class="ink thin" d="M${rt.x + 26} ${rt.y + 6} Q${rt.x + 40} ${cableY} ${rt.x + 60} ${cableY} H${pc.x - 30}"/>`;
+  s += tabletIcon(tab.x, tab.y, 1) + routerIcon(rt.x, rt.y, 0.5) + computerIcon(pc.x, pc.y, 1, t);
+  // her request: blinks from the tablet to the router, with what it says
+  if (between(tRaw, T.message, T.passes + 0.2)) {
+    s += rings(tab.x + 10, tab.y - 8, tRaw, { max: 60, speed: 60, count: 3, blink: true });
+    if (tRaw >= T.please[0] - 0.2) s += `<text class="txt" x="${tab.x + 8}" y="${PANEL.y + 30}" font-size="21" text-anchor="middle" opacity="${seg(tRaw, T.please[0] - 0.2, T.please[0] + 0.2).toFixed(2)}">"1 cartoon,</text>
+      <text class="txt" x="${tab.x + 8}" y="${PANEL.y + 52}" font-size="21" text-anchor="middle" opacity="${seg(tRaw, T.please[1] - 0.2, T.please[1] + 0.2).toFixed(2)}">please!"</text>`;
+  }
+  // the request runs down the cable
+  if (between(tRaw, T.passes, T.sends)) {
+    const q = seg(tRaw, T.passes, T.passes + 1.3);
+    s += `<circle class="blue" cx="${(rt.x + 60 + (pc.x - 30 - rt.x - 60) * q).toFixed(1)}" cy="${cableY}" r="6"/>`;
+  }
+  // the cartoon comes back in pieces
+  if (between(tRaw, T.sends, T.blinksBack)) {
+    if (tRaw < T.pieces) s += sunIcon(pc.x - 4, PANEL.y + 34, 0.9);
+    for (let k = 0; k < 5; k++) {
+      const q = seg(tRaw, T.pieces + k * 0.25, T.pieces + k * 0.25 + 1.2);
+      if (tRaw < T.pieces) continue;
+      const x = pc.x - 30 - (pc.x - 30 - rt.x - 40) * q;
+      s += `<rect class="orange" x="${(x - 5).toFixed(1)}" y="${cableY - 5}" width="10" height="10" rx="2"/>`;
+    }
+  }
+  // and the router blinks the pieces over to her tablet, where they make the picture again
+  if (tRaw >= T.blinksBack) {
+    s += rings(rt.x - 10, rt.y - 18, tRaw, { max: 70, speed: 80, count: 3, blink: true });
+    for (let k = 0; k < 5; k++) {
+      const q = seg(tRaw, T.blinksBack + k * 0.2, T.blinksBack + k * 0.2 + 0.7);
+      if (q >= 1) continue;
+      const x = rt.x - 16 - (rt.x - 16 - tab.x) * q, y = rt.y - 20 - Math.sin(q * Math.PI) * 30 + (tab.y - rt.y + 20) * q;
+      s += `<rect class="orange" x="${(x - 4).toFixed(1)}" y="${(y - 4).toFixed(1)}" width="8" height="8" rx="2"/>`;
+    }
+    if (tRaw >= T.blinksBack + 1.1) s += sunIcon(tab.x, tab.y, 0.65 * seg(tRaw, T.blinksBack + 1.1, T.blinksBack + 1.5));
+  }
+  return s;
+}
+
+function playButton(tRaw) {
+  const pressed = tRaw >= T.playPress;
+  const s = pressed ? 0.85 + 0.15 * seg(tRaw, T.playPress, T.playPress + 0.25) : 1;
+  return `<g class="ink" transform="translate(${PCX} ${PCY + 4}) scale(${s.toFixed(3)})">
+    <rect x="-80" y="-58" width="160" height="116" rx="12" fill="#ffffff"/>
+    <circle r="30" fill="#ffffff"/><path d="M-9 -15 L16 0 L-9 15 Z" class="${pressed ? 'blue' : 'dot'}"/></g>`;
+}
+
+function eyeBlink(tRaw) {
+  const shut = between(tRaw, T.blink, T.blink + 0.22);
+  const watch = tRaw >= T.eye + 0.4;
+  return `<g class="ink" transform="translate(${PCX} ${PCY + 6})">
+    ${shut ? '<path d="M-60 0 Q0 30 60 0"/><path class="thin" d="M-40 14 L-46 26 M0 22 V34 M40 14 L46 26"/>'
+      : '<path d="M-60 0 Q0 -46 60 0 Q0 46 -60 0 Z" fill="#ffffff"/><circle r="20" fill="#ffffff"/><circle class="dot" r="10"/><circle cx="5" cy="-5" r="3" fill="#ffffff" stroke="none"/>'}
+  </g>${watch ? `<text class="txt" x="${PCX}" y="${PANEL.y + PANEL.h - 14}" font-size="24" text-anchor="middle">faster than this</text>` : ''}`;
+}
+
+// A floor plan of the home: router's room, a middle room, her room. Rings lose strength at each wall.
+const ROOMS = [PANEL.x + 12, PANEL.x + 108, PANEL.x + 200, PANEL.x + PANEL.w - 12];
+function floorPlan(tRaw, t, opts = {}) {
+  const top = PANEL.y + 22, bot = PANEL.y + PANEL.h - 14, rx = PANEL.x + 52, ry = PCY + 12, kx = PANEL.x + 246, ky = PCY + 18;
+  let s = '';
+  const strength = [1, opts.fade ? 0.45 : 0.75, opts.fade ? 0.15 : 0.5];
+  for (let room = 0; room < 3; room++) {
+    s += `<clipPath id="room${room}"><rect x="${ROOMS[room]}" y="${top}" width="${ROOMS[room + 1] - ROOMS[room]}" height="${bot - top}"/></clipPath>`;
+    s += `<g clip-path="url(#room${room})" opacity="${strength[room]}">${rings(rx, ry, tRaw, { max: 230, speed: 70, count: 5, dashed: opts.fade && room === 2 })}</g>`;
+  }
+  s += `<g class="ink"><rect x="${ROOMS[0]}" y="${top}" width="${ROOMS[3] - ROOMS[0]}" height="${bot - top}" fill="none"/>
+    <path d="M${ROOMS[1]} ${top} V${bot - 34} M${ROOMS[2]} ${top + 30} V${bot}" stroke-width="${opts.thickWalls ? 9 : 5}"/></g>`;
+  s += routerIcon(rx, ry, 0.42);
+  s += `<g class="ink thin"><circle cx="${kx}" cy="${ky - 14}" r="9" fill="#ffffff"/><polygon class="orange" points="${kx},${ky - 5} ${kx - 10},${ky + 18} ${kx + 10},${ky + 18}"/>
+    <polygon class="orange" points="${kx},${ky - 23} ${kx - 7},${ky - 28} ${kx - 7},${ky - 19}"/><polygon class="orange" points="${kx},${ky - 23} ${kx + 7},${ky - 28} ${kx + 7},${ky - 19}"/></g>`;
+  if (opts.spinner) {
+    const spin = Math.floor(t * 8) * 45, big = opts.spinnerBig ? 1.6 : 1;
+    s += `<path class="wave" transform="translate(${kx + 22} ${ky - 30}) scale(${big}) rotate(${spin})" d="M9 0 A9 9 0 1 1 0 -9"/>`;
+  }
+  if (opts.ask) {
+    const q = seg(tRaw, T.ask, T.ask + 0.8);
+    s += `<path class="ink thin" d="M${kx - 14} ${ky - 30} Q${(kx + rx) / 2} ${top + 4} ${rx + 20} ${ry - 26}" stroke-dasharray="6 7" ${q < 1 ? `opacity="${q.toFixed(2)}"` : ''}/>
+      <text class="txt" x="${(kx + rx) / 2 + 20}" y="${top + 24}" font-size="22" text-anchor="middle" opacity="${q.toFixed(2)}">again?</text>`;
+  }
+  return s;
+}
+
+function lampAndDoor(tRaw, t) {
+  const doorX = PCX + 10, top = PANEL.y + 22, bot = PANEL.y + PANEL.h - 14;
+  const shut = seg(tRaw, T.close, T.close + 0.5);
+  let rays = '';
+  for (let k = 0; k < 9; k++) {
+    const a = (k / 9) * Math.PI * 2;
+    const r0 = 30 + ((t * 40 + k * 7) % 26), r1 = r0 + 12;
+    rays += `M${(PANEL.x + 70 + Math.cos(a) * r0).toFixed(1)} ${(PCY - 4 + Math.sin(a) * r0).toFixed(1)} L${(PANEL.x + 70 + Math.cos(a) * r1).toFixed(1)} ${(PCY - 4 + Math.sin(a) * r1).toFixed(1)} `;
+  }
+  // light reaches the far room through the open door until it shuts; then the far room goes dark
+  const reach = 1 - shut;
+  let far = '';
+  if (reach > 0) far += `<path d="M${doorX} ${PCY - 20} L${PANEL.x + PANEL.w - 14} ${PCY - 50} L${PANEL.x + PANEL.w - 14} ${PCY + 50} L${doorX} ${PCY + 26} Z" fill="#ee8420" opacity="${(0.35 * reach).toFixed(2)}" stroke="none"/>`;
+  if (shut > 0) far += `<rect x="${doorX + 4}" y="${top + 2}" width="${PANEL.x + PANEL.w - 16 - doorX}" height="${bot - top - 4}" fill="#1b1b1b" opacity="${(0.55 * shut).toFixed(2)}" stroke="none"/>`;
+  const ang = -70 * (1 - shut);   // the door swings shut
+  return `${far}<g class="ink">
+    <path d="M${doorX} ${top} V${PCY - 22} M${doorX} ${PCY + 28} V${bot}"/>
+    <path transform="rotate(${ang.toFixed(1)} ${doorX} ${PCY - 22})" d="M${doorX} ${PCY - 22} V${PCY + 28}" stroke-width="7"/>
+    <path class="thin" d="${rays}"/>
+    <path d="M${PANEL.x + 46} ${PCY - 4} L${PANEL.x + 56} ${PCY - 30} H${PANEL.x + 84} L${PANEL.x + 94} ${PCY - 4} Z M${PANEL.x + 70} ${PCY - 4} V${PCY + 40} M${PANEL.x + 56} ${PCY + 40} H${PANEL.x + 84}" fill="#ffffff"/>
+  </g>`;
+}
+
+// ---- the frame ----
+
+function scene(tRaw) {
+  const t = Math.floor(tRaw * 12) / 12;
+  const line = LINES.find(l => between(tRaw, l.a, l.b));
+  let out = `<path d="M40 ${GROUND + 2} H814" fill="none" stroke="#050505" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>`;
+  out += `<g class="ink"><path d="M340 372 H500 M356 372 L350 ${GROUND} M484 372 L490 ${GROUND}"/></g>` + routerIcon(420, 353, 1);
+
+  const p = Math.max(...T.shots.map(([a, b]) => seg(tRaw, a, a + 0.28) * (1 - seg(tRaw, b, b + 0.28))));
+  if (tRaw >= T.board && p < 0.05) {
+    out += `<rect class="ink" x="${PANEL.x}" y="${PANEL.y}" width="${PANEL.w}" height="${PANEL.h}" rx="14" fill="#ffffff" ${draw(seg(tRaw, T.board, T.board + 0.5))}/>`;
+    out += `<defs><clipPath id="board"><rect x="${PANEL.x + 3}" y="${PANEL.y + 3}" width="${PANEL.w - 6}" height="${PANEL.h - 6}" rx="12"/></clipPath></defs><g clip-path="url(#board)">`;
+    if (tRaw < T.play) out += journey(tRaw, t);
+    else if (tRaw < T.trip) out += playButton(tRaw);
+    else if (tRaw < T.eye) out += roundTrip(tRaw, t);
+    else if (tRaw < T.plan) out += eyeBlink(tRaw);
+    else if (tRaw < T.lamp) out += floorPlan(tRaw, t, { spinner: true });
+    else if (tRaw < L.d16.a) out += lampAndDoor(tRaw, t);
+    else out += floorPlan(tRaw, t, { fade: tRaw >= T.walls, thickWalls: between(tRaw, T.moreWalls, T.missed), spinner: tRaw >= T.missed, spinnerBig: tRaw >= T.spin, ask: tRaw >= T.ask });
+    out += '</g>';
+  }
+
+  // Dad: expressions and gestures on particular words, a laugh when he laughs
+  const dadLine = line && line.who === 'dad';
+  const changes = [T.cable, ...T.stops.map(s => s[1]), T.message, T.passes, T.sends, T.blinksBack, T.close, T.walls, T.missed];
+  const shake = between(tRaw, T.nope, T.nope + 0.6) ? (Math.floor(tRaw * 8) % 2 ? 9 : -9) : 0;
+  const pose = poseAt([
+    { from: T.nope, to: T.nope + 0.9, face: 'grin' },
+    { from: wordTime(L.d12, 'ocean') - 0.1, to: wordTime(L.d12, 'ocean') + 1.1, face: 'brows', tilt: 6 },
+    { from: wordTime(L.d12, 'giant'), to: wordTime(L.d12, 'away') + 0.4, face: 'brows', arm: 'up' },
+    { from: L.k16.a, to: L.k16.b + 0.2, tilt: 7 },
+    { from: T.please[0] - 0.1, to: T.please[1] + 0.5, face: 'brows', tilt: -10, left: 'hip' },
+    { from: L.k17.a, to: L.k17.b + 0.2, face: 'proud' },
+    { from: T.blink - 0.05, to: T.blink + 0.9, face: 'wink' },
+    { from: L.k18.a, to: L.k18.b + 0.3, face: 'think', arm: 'chin' },
+    { from: L.d15.a, to: L.d15.b, face: 'brows', tilt: 8 },
+    { from: L.k19.a, to: L.k19.b + 0.3, face: 'proud' },
+    { from: wordTime(L.d16, 'weaker'), to: wordTime(L.d16, 'weaker') + 1, face: 'brows' },
+    { from: T.spin - 0.1, to: L.d16.b + 0.3, arm: 'shrug', left: 'shrug', face: 'grin' },
+    ...laughs('dad'),
+  ], tRaw);
+  const pointing = dadLine && changes.some(c => c != null && between(tRaw, c, c + 1.4));
+  const nodNow = nod(tRaw, L.k19.b - 0.1, 0.6) + nod(tRaw, L.k17.b - 0.1, 0.6);
+  out += dad(DAD_X, t, Object.assign({ arm: pointing ? 'point' : dadLine ? 'talk' : 'rest', mouth: mouthLevel('dad', tRaw), tilt: shake, nod: nodNow }, pose));
+
+  // Daughter
+  let face = 'listen', look = 'left', arms = 'tablet';
+  if (p > 0.05) { face = 'viewer'; look = 'front'; }
+  else if (between(tRaw, L.k16.a - 0.1, L.k16.b + 0.2)) face = 'curious';
+  else if (between(tRaw, L.k17.a - 0.1, L.k17.b + 0.4)) { face = 'wow'; arms = 'up'; }
+  else if (between(tRaw, L.k18.a - 0.1, L.k18.b + 0.2)) face = 'curious';
+  else if (between(tRaw, L.k19.a - 0.1, L.k19.b + 0.4)) face = 'flat';
+  const kl = poseAt(laughs('kid'), tRaw);
+  out += kid(KID_X, t, { scale: 1, face: kl.face || face, look, mouth: mouthLevel('kid', tRaw), arms });
+
+  out += speech(line, DAD_X, KID_X, tRaw);
+  return closeUp(out, p, 'kid', KID_X, line);
+}
+</script>
+</body>
+</html>
