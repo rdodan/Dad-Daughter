@@ -39,6 +39,7 @@
 <script>
 // Channel picture (800x800, shown by YouTube as a circle): the two faces, big, on the paper.
 let LINES = [];
+const RING = new URLSearchParams(location.search).get('ring') === '1';   // ?ring=1 adds an ink ring at the edge
 function big(svg, x, ground, s) {
   return `<g style="--k:${(1.6 / s).toFixed(3)}" transform="translate(${x} ${ground}) scale(${s}) translate(${-x} ${-GROUND})">${svg}</g>`;
 }
@@ -51,6 +52,7 @@ function scene() {
   out += big(her, 318, 286 + 133.4 * 3.0, 3.0);
   // a blue question mark between them, the channel's question
   out += `<text class="txt" x="246" y="118" font-size="104" text-anchor="middle" style="fill:#2457d6">?</text>`;
+  if (RING) out += `<circle class="ink" cx="240" cy="240" r="226" fill="none" style="stroke-width:9px"/>`;
   return out;
 }
 window.addEventListener('load', () => window.renderFrame(0));
