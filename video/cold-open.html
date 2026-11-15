@@ -46,9 +46,12 @@ const between = (t, a, b) => t >= a && t < b;
 // Lines come from lines.json; `dur` is the length of each voice clip in seconds.
 // setup() places every line and action on the clock, so the picture follows the audio.
 let LINES = [], L = {}, T = {};
-window.setup = function (lines) {
+// With a recording made elsewhere (opts.track), every line already has its start and end in
+// that recording; the animation keeps those times and fits the actions around them.
+window.setup = function (lines, opts = {}) {
   LINES = lines; L = {}; T = {};
   lines.forEach(l => { L[l.id] = l; });
+  if (opts.track) return fitToTrack(opts.duration);
   let t = 0.5;
   const say = id => { L[id].a = t; L[id].b = t + L[id].dur; t = L[id].b; };
   say('k1'); t += 0.2; say('k2');
@@ -65,10 +68,30 @@ window.setup = function (lines) {
   t += 0.25; say('d3'); T.waves = L.d3.a + 0.15;
   t += 0.2; say('k7'); T.title = L.k7.a + 0.5;
   T.end = Math.max(L.k7.b, T.title + 1.4) + 1.2;
-  window.TIMELINE = { lines: lines.map(l => ({ id: l.id, a: l.a, b: l.b })), end: T.end };
+  finish();
+};
+
+function fitToTrack(duration) {
+  T.walkA = Math.max(0.3, L.k2.a + 0.4);                     // dad walks in while she shouts,
+  T.walkB = Math.min(T.walkA + 1.4, L.d1.a - 0.1);           // and is in place before he speaks
+  T.walkA = Math.max(0, Math.min(T.walkA, T.walkB - 0.7));
+  T.router = Math.max(L.k3.a, Math.min(L.k3.b - 0.1, L.d2.a - 0.4));
+  T.pointA = T.router + 0.3;
+  T.pointB = Math.min(L.d2.b + 0.3, L.k4.a - 0.4);
+  T.zoomIn = Math.max(L.d2.b, L.k4.a - 0.35);                // close-up lands as she starts
+  T.zoomOut = Math.min(L.k5.b + 0.1, L.k6.a - 0.3);
+  T.gap = L.k6.a + 0.3;
+  T.waves = L.d3.a + 0.15;
+  T.title = L.k7.a + 0.5;
+  T.end = Math.max(duration, L.k7.b, T.title + 1.4) + 0.6;
+  finish();
+}
+
+function finish() {
+  window.TIMELINE = { lines: LINES.map(l => ({ id: l.id, a: l.a, b: l.b })), end: T.end };
   window.TOTAL_FRAMES = Math.ceil(T.end * FPS);
   window.renderFrame(0);
-};
+}
 
 const measureEl = document.getElementById('measure');
 function textWidth(s, size) {

@@ -4,7 +4,8 @@ const { execFileSync } = require('child_process');
 
 const FPS = 24, OPEN = 0.12;
 
-function envelope(file) {
+// Raw loudness (RMS) per video frame.
+function loudness(file) {
   const rate = 8000, per = rate / FPS;
   const pcm = execFileSync('ffmpeg', ['-v', 'error', '-i', file, '-ac', '1', '-ar', String(rate), '-f', 's16le', '-'], { maxBuffer: 1 << 28 });
   const n = Math.floor(pcm.length / 2), rms = [];
@@ -13,10 +14,17 @@ function envelope(file) {
     for (let i = Math.floor(s); i < Math.min(n, s + per); i++) { const v = pcm.readInt16LE(i * 2) / 32768; sum += v * v; c++; }
     rms.push(Math.sqrt(sum / Math.max(1, c)));
   }
+  return rms;
+}
+
+// Scale raw loudness to 0..1 for one line, so each speaker's loud syllables reach 1.
+function scale(rms) {
   const loud = [...rms].sort((x, y) => x - y)[Math.floor(rms.length * 0.9)] || 1;
   const floor = loud * OPEN;
   return rms.map(v => +Math.min(1, Math.max(0, (v - floor) / (loud - floor))).toFixed(2));
 }
+
+const envelope = file => scale(loudness(file));
 
 // First and last frame where the mouth would be open.
 function speechSpan(env) {
@@ -26,4 +34,4 @@ function speechSpan(env) {
   return first < 0 ? [0, env.length - 1] : [first, last];
 }
 
-module.exports = { envelope, speechSpan, FPS };
+module.exports = { envelope, loudness, scale, speechSpan, FPS };

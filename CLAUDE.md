@@ -62,7 +62,8 @@ AI-made animated explainer channels are multiplying fast (searches for "animated
 | `video/audio/take.mp3`, `take.json` | The full dialogue take and where each line sits in it. |
 | `video/audio/<id>.mp3` | One clip per line, trimmed to the speech. |
 | `video/cold-open.html` | The animation. Exposes `window.setup(lines)` and `window.renderFrame(n)`. |
-| `video/render.js` | Renders every frame in headless Chromium, mixes the audio, encodes the MP4. |
+| `video/render.js` | Renders every frame in headless Chromium, mixes the audio, encodes the MP4. `--track <file>` uses one outside recording instead of the per-line clips. |
+| `video/import-audio.js` | Brings in a recording made elsewhere and finds each line's timing in it. |
 | `video/cold-open-480p.mp4` | Current result: about 26 seconds, 854×480, 24 fps, with voices. |
 
 ## How the video is made
@@ -71,6 +72,8 @@ AI-made animated explainer channels are multiplying fast (searches for "animated
 2. `render.js` reads each clip's length and loudness envelope, and `setup()` in `cold-open.html` places every line and action on the clock from those lengths. The picture always follows the audio, so a new take never needs manual re-timing.
 3. Mouths open by the loudness of the voice at that exact frame (`mouthLevel()`), so lips move with syllables and close in pauses. Speech bubbles pop at the start of each clip, which is when the speech starts.
 4. Each frame is screenshotted, then ffmpeg delays each clip to its start time, mixes them and muxes the MP4.
+
+**Using a recording the owner made elsewhere.** The owner may voice a scene themselves as one continuous file. `node video/import-audio.js <file>` saves it as `video/audio/track.flac` and writes `track.json` with every line's start and end, found by transcribing the file with word times (ElevenLabs `scribe_v1`) and aligning those words with the script's words. Then render with `--track video/audio/track.flac`: the recording plays untouched from the first frame, and the animation keeps its timing, fitting the walk-in, router, close-up and title around the lines (`fitToTrack()` in `cold-open.html`). Mouths are driven from that recording's loudness, line by line. Do not re-space or re-cut an owner's recording.
 
 Render commands (the font comes from the npm package `@fontsource/patrick-hand`; ffmpeg and Playwright must be installed):
 
