@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Channel picture: Dad, how does it work?</title>
+<style>
+  html, body { margin: 0; background: #fff; }
+  #stage { display: block; width: 480px; height: 480px; background: #fff; filter: url(#onpaper); }
+  .ink { fill: none; stroke: #050505; stroke-width: calc(5px * var(--k, 1)); stroke-linecap: round; stroke-linejoin: round; }
+  .thin { stroke-width: calc(3.2px * var(--k, 1)); }
+  .hair { stroke-width: calc(2.2px * var(--k, 1)); }
+  .dot { fill: #050505; stroke: none; }
+  .blue { fill: #2457d6; stroke: none; }
+  .orange { fill: #ee8420; stroke: none; }
+  .wave { fill: none; stroke: #2457d6; stroke-width: calc(5px * var(--k, 1)); stroke-linecap: round; }
+  .txt { font-family: "Patrick Hand", "Comic Sans MS", cursive; fill: #050505; stroke: none; }
+</style>
+</head>
+<body>
+<!-- The paper: creases stay still, the ink grain changes every few frames so the lines feel hand-drawn. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="onpaper" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feTurbulence type="turbulence" baseFrequency="0.006 0.008" numOctaves="5" seed="17" result="crease"/>
+    <feTurbulence id="grainNoise" type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="24" result="grainRaw"/>
+    <feColorMatrix in="grainRaw" type="matrix" values="2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  0 0 0 0 1" result="grain"/>
+    <feDisplacementMap in="SourceGraphic" in2="crease" scale="10" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+    <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
+    <feFlood flood-color="#ffffff" result="white"/>
+    <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
+    <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.2" k2="1" k3="0.2" k4="0" result="inked"/>
+    <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
+    <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
+    <feBlend in="light" in2="inked" mode="hard-light"/>
+  </filter>
+</defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><text id="measure" class="txt" font-size="27"></text></svg>
+<svg id="stage" viewBox="0 0 480 480"></svg>
+<script src="../video/common.js"></script>
+<script>
+// Channel picture (800x800, shown by YouTube as a circle): the two faces, big, on the paper.
+let LINES = [];
+function big(svg, x, ground, s) {
+  return `<g style="--k:${(1.6 / s).toFixed(3)}" transform="translate(${x} ${ground}) scale(${s}) translate(${-x} ${-GROUND})">${svg}</g>`;
+}
+function scene() {
+  let out = '';
+  // dad behind on the left, her in front on the right; both heads well inside the circle
+  out += big(dad(168, 0, { face: 'grin', tilt: 8 }), 168, 214 + 239.25 * 2.9, 2.9);
+  // her without the tablet (it would poke into the bottom of the circle)
+  const her = kid(318, 0, { scale: 1, face: 'viewer', look: 'front', arms: 'tablet' }).replace(/<g transform="rotate\([^"]*-40 46\)">[\s\S]*?<\/g>/, '');
+  out += big(her, 318, 286 + 133.4 * 3.0, 3.0);
+  // a blue question mark between them, the channel's question
+  out += `<text class="txt" x="246" y="118" font-size="104" text-anchor="middle" style="fill:#2457d6">?</text>`;
+  return out;
+}
+window.addEventListener('load', () => window.renderFrame(0));
+</script>
+</body>
+</html>

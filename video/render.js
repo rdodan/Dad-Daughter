@@ -2,11 +2,14 @@
 // Usage: node render.js <font.woff2> <frames-dir> <out.mp4> [options]
 //        node render.js <font.woff2> <frames-dir> --stills 1.5,8,19 [options]
 // Options: --scene cold-open.html  --lines lines.json  --track audio/cold-open.flac
+//          --height 1080   output height (480 by default; 1080 gives 1920x1080 for YouTube).
+//          At any height the picture is the same drawing, rendered sharper; frames stream
+//          straight into the encoder, so nothing large is written to disk.
 //
 // Without --track it uses the per-line clips in audio/<id>.mp3 and spaces them itself.
 // With --track it uses one recording made elsewhere (see import-audio.js) and keeps its timing.
 const { chromium } = require('playwright');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { envelope, loudness, scale, FPS } = require('./envelope');
@@ -18,6 +21,8 @@ const { envelope, loudness, scale, FPS } = require('./envelope');
   const trackFile = trackArg ? path.resolve(trackArg) : null;
   const sceneFile = path.resolve(__dirname, opt('--scene', 'cold-open.html'));
   const linesFile = path.resolve(__dirname, opt('--lines', 'lines.json'));
+  const height = parseInt(opt('--height', '480'), 10);
+  const width = Math.round(height * 16 / 9 / 2) * 2;   // 1920 for 1080
   const [fontPath, framesDir, outArg, stillsArg] = argv;
   fs.mkdirSync(framesDir, { recursive: true });
   const audio = id => path.join(__dirname, 'audio', `${id}.mp3`);
@@ -41,7 +46,7 @@ const { envelope, loudness, scale, FPS } = require('./envelope');
 
   const font = fs.readFileSync(fontPath).toString('base64');
   const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: 854, height: 480 }, deviceScaleFactor: 1 });
+  const page = await browser.newPage({ viewport: { width: 854, height: 480 }, deviceScaleFactor: height / 480 });
   await page.goto('file://' + sceneFile);
   await page.addStyleTag({ content: `@font-face { font-family: "Patrick Hand"; src: url(data:font/woff2;base64,${font}) format("woff2"); }` });
   await page.evaluate(async () => { await document.fonts.load('27px "Patrick Hand"'); await document.fonts.ready; });
@@ -58,26 +63,30 @@ const { envelope, loudness, scale, FPS } = require('./envelope');
   }
 
   const total = await page.evaluate(() => window.TOTAL_FRAMES);
-  for (let f = 0; f < total; f++) {
-    await page.evaluate(n => window.renderFrame(n), f);
-    await page.screenshot({ path: path.join(framesDir, `f${String(f).padStart(4, '0')}.png`) });
-  }
-  await browser.close();
-
-  const args = ['-y', '-loglevel', 'error', '-framerate', '24', '-i', path.join(framesDir, 'f%04d.png')];
+  const args = ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', '24', '-i', '-'];
   if (trackFile) {
     // The recording plays from the first frame, exactly as it was made.
-    args.push('-i', trackFile, '-filter_complex', '[1:a]apad[aout]');
+    args.push('-i', trackFile, '-filter_complex', `[0:v]scale=${width}:${height}:flags=lanczos,setsar=1[vout];[1:a]apad[aout]`);
   } else {
     // Each voice clip is delayed to its start time, then all are mixed under the picture.
     timeline.lines.forEach(l => args.push('-i', audio(l.id)));
     const delays = timeline.lines.map((l, i) => `[${i + 1}:a]adelay=${Math.round(l.a * 1000)}:all=1[a${i}]`).join(';');
     const mix = timeline.lines.map((_, i) => `[a${i}]`).join('') + `amix=inputs=${timeline.lines.length}:normalize=0,apad[aout]`;
-    args.push('-filter_complex', `${delays};${mix}`);
+    args.push('-filter_complex', `[0:v]scale=${width}:${height}:flags=lanczos,setsar=1[vout];${delays};${mix}`);
   }
-  args.push('-map', '0:v', '-map', '[aout]',
-    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '21', '-c:a', 'aac', '-b:a', '160k', '-ar', '44100',
-    '-t', (total / 24).toFixed(3), '-movflags', '+faststart', outArg);
-  execFileSync('ffmpeg', args);
+  args.push('-map', '[vout]', '-map', '[aout]',
+    '-c:v', 'libx264', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-crf', height > 480 ? '20' : '21',
+    '-c:a', 'aac', '-b:a', '192k', '-ar', '44100', '-t', (total / 24).toFixed(3), '-movflags', '+faststart', outArg);
+  const enc = spawn('ffmpeg', args, { stdio: ['pipe', 'inherit', 'inherit'] });
+  const done = new Promise((ok, fail) => enc.on('close', c => (c === 0 ? ok() : fail(new Error('ffmpeg exited with ' + c)))));
+  for (let f = 0; f < total; f++) {
+    await page.evaluate(n => window.renderFrame(n), f);
+    const shot = await page.screenshot({ type: 'png' });
+    if (!enc.stdin.write(shot)) await new Promise(r => enc.stdin.once('drain', r));
+    if (f % 240 === 0) console.error(`${path.basename(outArg)}: frame ${f} of ${total}`);
+  }
+  enc.stdin.end();
+  await done;
+  await browser.close();
   console.log('wrote', outArg, total, 'frames');
 })();

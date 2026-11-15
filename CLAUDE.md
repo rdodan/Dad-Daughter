@@ -70,6 +70,7 @@ AI-made animated explainer channels are multiplying fast (searches for "animated
 | `video/final.html`, `video/lines-final.json`, `video/final-480p.mp4` | Scenes 5 and 6 ("Two quick ones" and "She explains it back"), about 54 seconds: the router sharing blinks among the family's gadgets (more join on "more people"); our house and the neighbors', with a padlock and scrambled symbols on "password"; her recap drawn picture by picture as she says it, ticked on "actually right"; the ocean cable and "Next time!". |
 | `video/wifi-episode-480p.mp4` | The whole pilot episode, all sections joined: 3 min 18 s. Rebuild with the ffmpeg `concat` filter over the four section MP4s in order (cold-open, invisible-light, cartoon-and-stuck, final). |
 | `youtube/thumbnail.html`, `youtube/thumbnail-a.png`, `youtube/thumbnail-b.png`, `youtube/wifi-upload.md` | Thumbnails drawn with the show's own characters and paper (1280×720; `?v=a` / `?v=b`), and the episode's title, description with chapters, tags and upload settings. |
+| `youtube/channel-picture.html`, `youtube/channel-picture.png`, `youtube/channel.md` | Channel picture (the two faces and a blue "?" on the paper, 800×800, made to read as a small circle) and the channel description. The owner says they started the channel for their daughter to learn new things in a fun, interactive way; the cartoon daughter is still a fictional character. |
 | `video/render.js` | Renders every frame in headless Chromium, mixes the audio, encodes the MP4. `--track <file>` uses one outside recording instead of the per-line clips. |
 | `video/import-audio.js` | Brings in a recording made elsewhere and finds each line's timing in it. |
 | `video/cold-open-480p.mp4` | Current result: about 26 seconds, 854×480, 24 fps, with voices. |
@@ -82,6 +83,8 @@ AI-made animated explainer channels are multiplying fast (searches for "animated
 4. Each frame is screenshotted, then ffmpeg delays each clip to its start time, mixes them and muxes the MP4.
 
 **Using a recording the owner made elsewhere (the normal way now).** The owner voices each section themselves and sends one file per section. `node video/import-audio.js <file> --lines lines-<scene>.json --out <scene>` saves it as `video/audio/<scene>.flac` and writes `<scene>.json` with every line's start and end and every word's time, found by transcribing the file (ElevenLabs `scribe_v1`) and aligning those words with the script's words. Then render with `--scene <scene>.html --lines lines-<scene>.json --track video/audio/<scene>.flac`: the recording plays untouched from the first frame, and the animation keeps its timing, fitting the walk-in, router, close-up and title around the lines (`fitToTrack()` in `cold-open.html`). Mouths are driven from that recording's loudness, line by line. Do not re-space or re-cut an owner's recording.
+
+For YouTube, render at 1080p with `--height 1080` (1920×1080). It is about 5× slower (roughly 5 minutes per 25 seconds of video on one core), so render the sections in parallel and then join them. 1080p files are not committed (see `.gitignore`); send them to the owner as files.
 
 Render commands (the font comes from the npm package `@fontsource/patrick-hand`; ffmpeg and Playwright must be installed):
 
