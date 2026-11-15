@@ -2,10 +2,11 @@
 // common format) and works out where each line of lines.json sits in it, so the animation can
 // follow that recording's own timing.
 //
-// Usage: node import-audio.js <recording>
-//   -> audio/track.flac  the recording, as used for the video
-//   -> audio/track.json  start and end of every line, in seconds
-// Then render with:  node render.js <font> <frames-dir> <out.mp4> --track audio/track.flac
+// Usage: node import-audio.js <recording> [--lines lines.json] [--out cold-open]
+//   -> audio/<out>.flac  the recording, as used for the video
+//   -> audio/<out>.json  start and end of every line, in seconds
+// Then render with:  node render.js <font> <frames-dir> <out.mp4> --track audio/<out>.flac
+//                    (plus --scene and --lines for any scene other than the cold open)
 //
 // How it finds the lines: ElevenLabs speech-to-text gives every spoken word with its time; those
 // words are aligned with the script's words (tolerating small differences and ad-libs), and each
@@ -16,11 +17,15 @@ const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const src = process.argv[2];
-if (!src || !fs.existsSync(src)) { console.error('usage: node import-audio.js <recording>'); process.exit(1); }
+const argv = process.argv.slice(2);
+const opt = (name, dflt) => { const i = argv.indexOf(name); return i >= 0 ? argv.splice(i, 2)[1] : dflt; };
+const linesFile = path.resolve(__dirname, opt('--lines', 'lines.json'));
+const outName = opt('--out', 'cold-open');
+const src = argv[0];
+if (!src || !fs.existsSync(src)) { console.error('usage: node import-audio.js <recording> [--lines lines.json] [--out cold-open]'); process.exit(1); }
 const dir = path.join(__dirname, 'audio');
 fs.mkdirSync(dir, { recursive: true });
-const track = path.join(dir, 'track.flac');
+const track = path.join(dir, `${outName}.flac`);
 execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', src, '-vn', '-ac', '1', '-ar', '44100', track]);
 const duration = parseFloat(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', track]).toString());
 
@@ -35,7 +40,7 @@ const events = stt.words.filter(w => w.type === 'audio_event');
 
 // 2. Align the transcript's words with the script's words.
 const norm = s => s.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/'/g, '').split(/\s+/).filter(Boolean);
-const lines = JSON.parse(fs.readFileSync(path.join(__dirname, 'lines.json'), 'utf8'));
+const lines = JSON.parse(fs.readFileSync(linesFile, 'utf8'));
 const script = [];                                  // { tok, line }
 lines.forEach((l, li) => norm(l.show.join(' ').replace(/-/g, '')).forEach(tok => script.push({ tok, line: li })));
 const heard = words.map(w => norm(w.text.replace(/-/g, '')).join(''));
@@ -66,7 +71,13 @@ for (let i = n, j = m; i > 0 && j > 0;) {
 const out = lines.map((l, li) => {
   const idx = script.map((s, k) => (s.line === li ? at[k] : -1)).filter(k => k >= 0);
   if (!idx.length) throw new Error(`could not find line ${l.id} ("${l.show.join(' ')}") in the recording`);
-  return { id: l.id, a: words[Math.min(...idx)].start, b: words[Math.max(...idx)].end };
+  // Every script word of the line with its time in the recording (null if it was not heard),
+  // and how many of those words each displayed line holds. Scenes use these to time bubble pages
+  // and to make things happen on a particular word.
+  const tok = script.map((s, k) => ({ s, k })).filter(x => x.s.line === li)
+    .map(({ s, k }) => ({ w: s.tok, a: at[k] >= 0 ? words[at[k]].start : null, b: at[k] >= 0 ? words[at[k]].end : null }));
+  const lineTok = l.show.map(sl => norm(sl.replace(/-/g, '')).length);
+  return { id: l.id, a: words[Math.min(...idx)].start, b: words[Math.max(...idx)].end, tok, lineTok };
 });
 out.forEach((o, k) => {
   const prevEnd = k ? out[k - 1].b : 0;
@@ -77,7 +88,7 @@ out.forEach((o, k) => {
 });
 out.forEach((o, k) => { if (k < out.length - 1) o.b = Math.min(o.b, out[k + 1].a); });
 
-fs.writeFileSync(path.join(dir, 'track.json'), JSON.stringify({ duration, lines: out }, null, 1));
+fs.writeFileSync(path.join(dir, `${outName}.json`), JSON.stringify({ duration, lines: out }, null, 1));
 console.log('heard:', stt.text);
 out.forEach(o => console.log(o.id.padEnd(3), o.a.toFixed(2), '->', o.b.toFixed(2), '|', lines.find(l => l.id === o.id).show.join(' ')));
 const missed = script.filter((s, k) => at[k] < 0 || !same(s.tok, heard[at[k]]));

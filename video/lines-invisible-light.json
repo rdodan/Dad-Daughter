@@ -1,0 +1,17 @@
+[
+  {"id": "d4", "who": "dad", "show": ["Yep. Your cartoon flies across", "the room. You just can't see it."]},
+  {"id": "k8", "who": "kid", "show": ["Like a ghost?"]},
+  {"id": "d5", "who": "dad", "show": ["Like light. You know how a lamp", "shines in every direction?"]},
+  {"id": "k9", "who": "kid", "show": ["Yeah."]},
+  {"id": "d6", "who": "dad", "show": ["The router is a lamp. It shines", "all the time, in every direction.", "But it shines a kind of light", "your eyes can't see."]},
+  {"id": "k10", "who": "kid", "show": ["Invisible light?", "You made that up."]},
+  {"id": "d7", "who": "dad", "show": ["It's real. It's called radio waves.", "It's the same stuff that brings", "music to the car radio."]},
+  {"id": "k11", "who": "kid", "viewer": true, "show": ["Hang on. If it's", "just a lamp, how is", "a lamp sending me", "a cartoon?"]},
+  {"id": "d8", "who": "dad", "show": ["Ever seen someone blink a flashlight", "to send a message?", "On, off, on, on, off."]},
+  {"id": "k12", "who": "kid", "show": ["Like a", "secret code!"]},
+  {"id": "d9", "who": "dad", "show": ["Exactly. The router blinks its", "invisible light in a code. Just really,", "really fast. Millions of blinks", "every second."]},
+  {"id": "k13", "who": "kid", "show": ["MILLIONS?"]},
+  {"id": "d10", "who": "dad", "show": ["And your tablet has a tiny part inside", "that can see that light. It reads the", "blinks and turns them back into a picture."]},
+  {"id": "k14", "who": "kid", "show": ["So my cartoon", "is... blinks."]},
+  {"id": "d11", "who": "dad", "show": ["Your cartoon is a LOT of blinks."]}
+]

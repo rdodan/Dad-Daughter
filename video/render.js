@@ -1,6 +1,7 @@
 // Renders cold-open.html frame by frame, adds the voices, and encodes a 480p MP4.
-// Usage: node render.js <font.woff2> <frames-dir> <out.mp4> [--track audio/track.flac]
-//        node render.js <font.woff2> <frames-dir> --stills 1.5,8,19 [--track audio/track.flac]
+// Usage: node render.js <font.woff2> <frames-dir> <out.mp4> [options]
+//        node render.js <font.woff2> <frames-dir> --stills 1.5,8,19 [options]
+// Options: --scene cold-open.html  --lines lines.json  --track audio/cold-open.flac
 //
 // Without --track it uses the per-line clips in audio/<id>.mp3 and spaces them itself.
 // With --track it uses one recording made elsewhere (see import-audio.js) and keeps its timing.
@@ -12,19 +13,22 @@ const { envelope, loudness, scale, FPS } = require('./envelope');
 
 (async () => {
   const argv = process.argv.slice(2);
-  const ti = argv.indexOf('--track');
-  const trackFile = ti >= 0 ? path.resolve(argv.splice(ti, 2)[1]) : null;
+  const opt = (name, dflt) => { const i = argv.indexOf(name); return i >= 0 ? argv.splice(i, 2)[1] : dflt; };
+  const trackArg = opt('--track', null);
+  const trackFile = trackArg ? path.resolve(trackArg) : null;
+  const sceneFile = path.resolve(__dirname, opt('--scene', 'cold-open.html'));
+  const linesFile = path.resolve(__dirname, opt('--lines', 'lines.json'));
   const [fontPath, framesDir, outArg, stillsArg] = argv;
   fs.mkdirSync(framesDir, { recursive: true });
   const audio = id => path.join(__dirname, 'audio', `${id}.mp3`);
-  const lines = JSON.parse(fs.readFileSync(path.join(__dirname, 'lines.json'), 'utf8'));
+  const lines = JSON.parse(fs.readFileSync(linesFile, 'utf8'));
   let opts = {};
   if (trackFile) {
     const info = JSON.parse(fs.readFileSync(trackFile.replace(/\.[a-z0-9]+$/i, '.json'), 'utf8'));
     const rms = loudness(trackFile);
     for (const l of lines) {
       const t = info.lines.find(x => x.id === l.id);
-      l.a = t.a; l.b = t.b;
+      l.a = t.a; l.b = t.b; l.tok = t.tok; l.lineTok = t.lineTok;
       l.env = scale(rms.slice(Math.floor(t.a * FPS), Math.ceil(t.b * FPS)));
     }
     opts = { track: true, duration: info.duration };
@@ -38,7 +42,7 @@ const { envelope, loudness, scale, FPS } = require('./envelope');
   const font = fs.readFileSync(fontPath).toString('base64');
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 854, height: 480 }, deviceScaleFactor: 1 });
-  await page.goto('file://' + path.join(__dirname, 'cold-open.html'));
+  await page.goto('file://' + sceneFile);
   await page.addStyleTag({ content: `@font-face { font-family: "Patrick Hand"; src: url(data:font/woff2;base64,${font}) format("woff2"); }` });
   await page.evaluate(async () => { await document.fonts.load('27px "Patrick Hand"'); await document.fonts.ready; });
   const timeline = await page.evaluate(([ls, o]) => { window.setup(ls, o); return window.TIMELINE; }, [lines, opts]);

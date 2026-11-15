@@ -61,7 +61,11 @@ AI-made animated explainer channels are multiplying fast (searches for "animated
 | `video/envelope.js` | Measures loudness per video frame; drives the mouths and the clip trimming. |
 | `video/audio/take.mp3`, `take.json` | The full dialogue take and where each line sits in it. |
 | `video/audio/<id>.mp3` | One clip per line, trimmed to the speech. |
-| `video/cold-open.html` | The animation. Exposes `window.setup(lines)` and `window.renderFrame(n)`. |
+| `video/common.js` | Shared by every scene: the two characters, speech bubbles (long lines turn over two lines at a time, on the spoken word), the close-up, `wordTime()`, and `renderFrame()`. Change the characters here, once. |
+| `video/cold-open.html` | Scene 1 (cold open). Defines `setup(lines, opts)` and `scene(t)`. |
+| `video/invisible-light.html`, `video/lines-invisible-light.json` | Scene 2, "Invisible light": a drawing board between the two shows the ghost, lamp, router = lamp, crossed-out eye, radio waves and car, the flashlight blinking on each spoken "on"/"off", a blink counter, the tablet's tiny receiver, and the cartoon turning into blue dots. |
+| `video/audio/<scene>.flac`, `<scene>.json` | The owner's recording for a scene, and each line's start, end and per-word times in it. |
+| `video/invisible-light-480p.mp4` | Scene 2 rendered, about 61 seconds. |
 | `video/render.js` | Renders every frame in headless Chromium, mixes the audio, encodes the MP4. `--track <file>` uses one outside recording instead of the per-line clips. |
 | `video/import-audio.js` | Brings in a recording made elsewhere and finds each line's timing in it. |
 | `video/cold-open-480p.mp4` | Current result: about 26 seconds, 854×480, 24 fps, with voices. |
@@ -73,7 +77,7 @@ AI-made animated explainer channels are multiplying fast (searches for "animated
 3. Mouths open by the loudness of the voice at that exact frame (`mouthLevel()`), so lips move with syllables and close in pauses. Speech bubbles pop at the start of each clip, which is when the speech starts.
 4. Each frame is screenshotted, then ffmpeg delays each clip to its start time, mixes them and muxes the MP4.
 
-**Using a recording the owner made elsewhere.** The owner may voice a scene themselves as one continuous file. `node video/import-audio.js <file>` saves it as `video/audio/track.flac` and writes `track.json` with every line's start and end, found by transcribing the file with word times (ElevenLabs `scribe_v1`) and aligning those words with the script's words. Then render with `--track video/audio/track.flac`: the recording plays untouched from the first frame, and the animation keeps its timing, fitting the walk-in, router, close-up and title around the lines (`fitToTrack()` in `cold-open.html`). Mouths are driven from that recording's loudness, line by line. Do not re-space or re-cut an owner's recording.
+**Using a recording the owner made elsewhere (the normal way now).** The owner voices each section themselves and sends one file per section. `node video/import-audio.js <file> --lines lines-<scene>.json --out <scene>` saves it as `video/audio/<scene>.flac` and writes `<scene>.json` with every line's start and end and every word's time, found by transcribing the file (ElevenLabs `scribe_v1`) and aligning those words with the script's words. Then render with `--scene <scene>.html --lines lines-<scene>.json --track video/audio/<scene>.flac`: the recording plays untouched from the first frame, and the animation keeps its timing, fitting the walk-in, router, close-up and title around the lines (`fitToTrack()` in `cold-open.html`). Mouths are driven from that recording's loudness, line by line. Do not re-space or re-cut an owner's recording.
 
 Render commands (the font comes from the npm package `@fontsource/patrick-hand`; ffmpeg and Playwright must be installed):
 
@@ -132,7 +136,9 @@ Things that went wrong and should not be repeated:
 ## Open items
 
 - The owner now makes the audio themselves (cold open sped up to 1.11×) and sends it as a file; use `import-audio.js` and `render.js --track`. The owner approved the cold open made this way. The ElevenLabs pipeline in `voices.js` is a fallback.
-- The owner is recording the remaining sections. Their animation does not exist yet: each section needs its lines added (in `lines.json` or a per-scene equivalent) and its scene drawn.
+- Sections done: cold open, invisible light. Still to come from the owner: "Where the cartoon lives", "Why it gets stuck", "Two quick ones", "She explains it back". For each: write `lines-<scene>.json` from `scripts/wifi-pilot.md`, import the recording, build `<scene>.html` on `common.js` (copy the head of an existing scene), check stills, render.
+- Rendered sections are separate MP4s; joining them into one episode is not done yet.
+- Keep her bubble lines short (two short lines): long kid bubbles overlap the drawing board.
 - Only the first 30 seconds of the pilot are animated; the rest of the script has no animation or audio.
 - Whether to keep speech bubbles in wide shots now that there are voices.
 - The daughter character has no name; the dad calls her nothing specific in the script.
