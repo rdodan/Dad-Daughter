@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Channel banner: Dad, how does it work?</title>
+<style>
+  html, body { margin: 0; background: #fff; }
+  #stage { display: block; width: 854px; height: 480px; background: #fff; filter: url(#onpaper); }
+  .ink { fill: none; stroke: #050505; stroke-width: calc(5px * var(--k, 1)); stroke-linecap: round; stroke-linejoin: round; }
+  .thin { stroke-width: calc(3.2px * var(--k, 1)); }
+  .hair { stroke-width: calc(2.2px * var(--k, 1)); }
+  .dot { fill: #050505; stroke: none; }
+  .blue { fill: #2457d6; stroke: none; }
+  .orange { fill: #ee8420; stroke: none; }
+  .wave { fill: none; stroke: #2457d6; stroke-width: calc(5px * var(--k, 1)); stroke-linecap: round; }
+  .txt { font-family: "Patrick Hand", "Comic Sans MS", cursive; fill: #050505; stroke: none; }
+</style>
+</head>
+<body>
+<!-- The paper: creases stay still, the ink grain changes every few frames so the lines feel hand-drawn. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="onpaper" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feTurbulence type="turbulence" baseFrequency="0.006 0.008" numOctaves="5" seed="17" result="crease"/>
+    <feTurbulence id="grainNoise" type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="24" result="grainRaw"/>
+    <feColorMatrix in="grainRaw" type="matrix" values="2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  2.4 0 0 0 -0.7  0 0 0 0 1" result="grain"/>
+    <feDisplacementMap in="SourceGraphic" in2="crease" scale="10" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+    <feDisplacementMap in="bent" in2="grainRaw" scale="2.2" xChannelSelector="G" yChannelSelector="B" result="roughRaw"/>
+    <feFlood flood-color="#ffffff" result="white"/>
+    <feComposite in="roughRaw" in2="white" operator="over" result="rough"/>
+    <feComposite in="rough" in2="grain" operator="arithmetic" k1="-0.2" k2="1" k3="0.2" k4="0" result="inked"/>
+    <feDiffuseLighting in="crease" surfaceScale="5" diffuseConstant="1" lighting-color="white" result="lightRaw"><feDistantLight azimuth="40" elevation="30"/></feDiffuseLighting>
+    <feComponentTransfer in="lightRaw" result="light"><feFuncR type="linear" slope="0.8" intercept="0.12"/><feFuncG type="linear" slope="0.8" intercept="0.12"/><feFuncB type="linear" slope="0.8" intercept="0.12"/></feComponentTransfer>
+    <feBlend in="light" in2="inked" mode="hard-light"/>
+  </filter>
+</defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><text id="measure" class="txt" font-size="27"></text></svg>
+<svg id="stage" viewBox="0 0 854 480"></svg>
+<script src="../video/common.js"></script>
+<script>
+// Channel banner, 2560x1440 (rendered from this 854x480 page at 3x).
+// YouTube shows only part of it: every device shows the middle strip (y 169-311 here), phones
+// only its centre (x 169-685). So the name sits in that centre, the two of them at its edges,
+// and doodles from the episodes fill the rest of the strip for computers and TVs.
+let LINES = [];
+const SAFE = { x0: 169, x1: 685, y0: 169, y1: 311 };
+function big(svg, x, ground, s, k) {
+  return `<g style="--k:${k}" transform="translate(${x} ${ground}) scale(${s}) translate(${-x} ${-GROUND})">${svg}</g>`;
+}
+function router(x, y, s) {
+  return `<g class="ink" transform="translate(${x} ${y}) scale(${s})">
+    <rect x="-45" y="-15" width="90" height="30" rx="6" fill="#ffffff"/><path d="M-29 -15 L-37 -47 M29 -15 L37 -47"/>
+    <circle class="dot" cx="-27" cy="0" r="3"/><circle class="blue" cx="-13" cy="0" r="4"/><circle class="dot" cx="1" cy="0" r="3"/></g>`;
+}
+function lamp(x, y) {
+  let rays = '';
+  for (let k = 0; k < 9; k++) { const a = k / 9 * Math.PI * 2 + 0.2; rays += `M${(x + Math.cos(a) * 30).toFixed(1)} ${(y - 20 + Math.sin(a) * 30).toFixed(1)} L${(x + Math.cos(a) * 42).toFixed(1)} ${(y - 20 + Math.sin(a) * 42).toFixed(1)} `; }
+  return `<g class="ink"><path d="M${x - 20} ${y - 6} L${x - 12} ${y - 34} H${x + 12} L${x + 20} ${y - 6} Z M${x} ${y - 6} V${y + 34} M${x - 16} ${y + 34} H${x + 16}" fill="#ffffff"/><path class="thin" d="${rays}"/></g>`;
+}
+function scene() {
+  let out = '';
+  // left of the strip: the router sending its blue rings
+  out += router(72, 268, 0.8);
+  for (let k = 0; k < 3; k++) { const r = 18 + k * 17; out += `<path class="wave" opacity="${(1 - k * 0.25).toFixed(2)}" d="M${92 + r * 0.5} ${236 - r * 0.87} A${r} ${r} 0 0 1 ${92 + r} 236"/>`; }
+  // right of the strip: the lamp, and a flashlight blinking its code
+  out += lamp(790, 246);
+  out += `<text class="txt" x="704" y="200" font-size="20" style="fill:#2457d6">● ○ ●</text>`;
+  // the two of them at the edges of the phone-safe centre
+  out += big(dad(214, 0, { face: 'grin', tilt: -6 }), 214, 240 + 239.25 * 1.07, 1.07, 0.9);
+  out += big(kid(641, 0, { scale: 1, face: 'viewer', look: 'front', arms: 'tablet', mouth: 0 }), 641, 246 + 133.4 * 1.23, 1.23, 0.85);
+  // the channel's name, on one line in the middle of everything
+  out += `<text class="txt" x="427" y="252" font-size="44" text-anchor="middle">Dad, how does it work?</text>
+    <path class="wave" stroke-width="4" d="M262 266 Q340 259 427 264 T592 262"/>`;
+  // a few question marks scattered in the space TVs show above and below the strip
+  [[120, 120, 40], [330, 92, 30], [560, 110, 36], [760, 380, 34], [110, 400, 30], [470, 400, 28]].forEach(([x, y, s]) =>
+    out += `<text class="txt" x="${x}" y="${y}" font-size="${s}" text-anchor="middle" style="fill:#2457d6" opacity="0.8">?</text>`);
+  return out;
+}
+window.addEventListener('load', () => window.renderFrame(0));
+</script>
+</body>
+</html>
